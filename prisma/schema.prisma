@@ -43,12 +43,15 @@ model User {
 }
 
 model Project {
-  id         Int     @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   nome       String
   env        String
   tenant     String
-  empresaId  Int
-  empresa    Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  inicio     DateTime
+  userProp   String
+  status     String
+  empresaId  Int?      // <-- agora pode ser nulo
+  empresa    Empresa?  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   servers    Server[]
 }
 
