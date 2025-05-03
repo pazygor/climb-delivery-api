@@ -8,21 +8,38 @@ export class ProjectsService {
   constructor(private readonly prisma: PrismaService) { }
 
   async create(createProjectDto: CreateProjectDto) {
-    const data: any = {
-      nome: createProjectDto.nome,
-      env: createProjectDto.env,
-      tenant: createProjectDto.tenant,
-      userProp: createProjectDto.userProp,
-      status: createProjectDto.status,
-      inicio: createProjectDto.inicio,
-    };
+    const { nome, env, tenant, userProp, status, inicio, empresaId } = createProjectDto;
 
-    if (createProjectDto.empresaId) {
-      data.empresaId = createProjectDto.empresaId;
+    const existingProject = await this.prisma.project.findFirst({
+      where: { tenant, env },
+    });
+
+    if (existingProject) {
+      return this.prisma.project.update({
+        where: { id: existingProject.id },
+        data: {
+          nome,
+          userProp,
+          status,
+          inicio,
+          empresaId: empresaId ?? null,
+        },
+      });
+    } else {
+      return this.prisma.project.create({
+        data: {
+          nome,
+          env,
+          tenant,
+          userProp,
+          status,
+          inicio,
+          empresaId: empresaId ?? null,
+        },
+      });
     }
-
-    return this.prisma.project.create({ data });
   }
+
 
   async findAll() {
     return this.prisma.project.findMany({

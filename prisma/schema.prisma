@@ -1,3 +1,5 @@
+
+
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -14,119 +16,149 @@ datasource db {
 }
 
 model Empresa {
-  id          Int      @id @default(autoincrement())
-  cnpj        String   @unique @db.VarChar(14)
-  razao_soc   String
-  cidade      String
-  uf          String   @db.VarChar(2)
-  endereco    String
-  bairro      String
-  cep         String
-  data_adesao DateTime @db.Date
-  hora_adesao DateTime @db.Time(0)
-  tenant      String
-  users       User[]
-  projects    Project[]
-  servers     Server[]
+  id               Int         @id @default(autoincrement()) @map("id")
+  cnpj             String      @db.VarChar(14) @map("cnpj")
+  razaoSocial      String      @map("razao_social")
+  cidade           String      @map("cidade")
+  uf               String      @db.VarChar(2) @map("uf")
+  endereco         String      @map("endereco")
+  bairro           String      @map("bairro")
+  cep              String      @map("cep")
+  dataAdesao       DateTime    @db.Date @map("data_adesao")
+  horaAdesao       DateTime    @db.Time(0) @map("hora_adesao")
+  tenant           String      @map("tenant")
+  env              String      @map("env")
+  modoContratado   String      @db.VarChar(20) @map("modo_contratado")
+  limiteProjetos   Int         @default(0) @map("limite_projetos")
+  limiteServidores Int         @default(0) @map("limite_servidores")
+
+  usuarios   Usuario[] @relation("EmpresaUsuarios")
+  projetos   Projeto[] @relation("EmpresaProjetos")
+  servidores Servidor[] @relation("EmpresaServidores")
+
+  @@unique([tenant, env], name: "tenant_env")
+  @@map("empresa")
 }
 
-model User {
-  id         Int     @id @default(autoincrement())
-  firstname  String
-  lastname   String
-  email      String  @unique
-  phone      String?
-  empresaId  Int
-  empresa    Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  password   String
-  groups     GroupUser[]
+model Projeto {
+  id                  Int        @id @default(autoincrement()) @map("id")
+  nome                String     @map("nome")
+  env                 String     @map("env")
+  tenant              String     @map("tenant")
+  dataInicio          DateTime   @map("data_inicio")
+  usuarioProprietario String     @map("usuario_proprietario")
+  status              String     @map("status")
+  empresaId           Int?       @map("empresa_id")
+  empresa             Empresa?   @relation("EmpresaProjetos", fields: [empresaId], references: [id], onDelete: Cascade)
+
+  servidores Servidor[] @relation("ProjetoServidores")
+
+  @@unique([tenant, env], name: "tenant_env")
+  @@map("projeto")
 }
 
-model Project {
-  id         Int       @id @default(autoincrement())
-  nome       String
-  env        String
-  tenant     String
-  inicio     DateTime
-  userProp   String
-  status     String
-  empresaId  Int?      // <-- agora pode ser nulo
-  empresa    Empresa?  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  servers    Server[]
+model Servidor {
+  id                   Int           @id @default(autoincrement()) @map("id")
+  nome                 String        @map("nome")
+  ip                   String        @map("ip")
+  tipo                 String        @map("tipo")
+  sistemaOperacional   String        @map("sistema_operacional")
+  status               String        @map("status")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  projetoId            Int           @map("projeto_id")
+  projeto              Projeto       @relation("ProjetoServidores", fields: [projetoId], references: [id], onDelete: Cascade)
+  empresaId            Int           @map("empresa_id")
+  empresa              Empresa       @relation("EmpresaServidores", fields: [empresaId], references: [id], onDelete: Cascade)
+
+  alertasInfra AlertaInfra[] @relation("ServidorAlertasInfra")
+  alertasApp   AlertaApp[]   @relation("ServidorAlertasApp")
+  contatos     Contato[]     @relation("ServidorContatos")
+
+  @@map("servidor")
 }
 
-model Server {
-  id            Int         @id @default(autoincrement())
-  ip            String      @unique
-  hostname      String
-  so_name       String
+model Usuario {
+  id          Int       @id @default(autoincrement()) @map("id")
+  empresaId   Int       @map("empresa")
+  nome        String    @map("nome")
+  senha       String    @map("senha")
+  email       String    @unique @map("email")
+  imagem      String?   @map("imagem")
+  permissao   Int?      @map("permissao")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  token       String?   @map("token")
+  ativo       Boolean   @default(true) @map("ativo")
+  loginAtivo  Boolean?  @map("login_ativo")
+  motivo      String?   @map("motivo")
+  validade    DateTime? @map("validade")
+  perfil      Int?      @map("perfil")
+  celular     String?   @map("celular")
+  cadastro    Int?      @map("cadastro")
 
-  projectId     Int
-  project       Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  empresa     Empresa   @relation("EmpresaUsuarios", fields: [empresaId], references: [id])
+  grupoUsuarios GrupoUsuario[] @relation("GrupoUsuarios")
+  @@map("usuarios")
+}
+model Grupo {
+  id          Int              @id @default(autoincrement()) @map("id")
+  nome        String           @map("nome")
+  descricao   String?          @map("descricao")
+  usuarios    GrupoUsuario[]   @relation("GrupoUsuarios")
+  alertas     GrupoAlerta[]    @relation("GrupoAlertas")
 
-  empresaId     Int
-  empresa       Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-
-  infra_alerts  InfraAlert[]
-  app_alerts    AppAlert[]
-  contacts      Contact[]
+  @@map("grupo")
 }
 
-model Group {
-  id          Int         @id @default(autoincrement())
-  name        String
-  description String?
-  users       GroupUser[]
-  alerts      GroupAlert[]
+model GrupoUsuario {
+  id        Int      @id @default(autoincrement()) @map("id")
+  usuarioId Int      @map("usuario_id")
+  grupoId   Int      @map("grupo_id")
+  usuario   Usuario  @relation("GrupoUsuarios", fields: [usuarioId], references: [id], onDelete: Cascade)
+  grupo     Grupo    @relation("GrupoUsuarios", fields: [grupoId], references: [id], onDelete: Cascade)
+
+  @@map("grupo_usuario")
 }
 
-model GroupUser {
-  id       Int    @id @default(autoincrement())
-  userId   Int
-  groupId  Int
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  group    Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+model GrupoAlerta {
+  id             Int           @id @default(autoincrement()) @map("id")
+  grupoId        Int           @map("grupo_id")
+  grupo          Grupo         @relation("GrupoAlertas", fields: [grupoId], references: [id], onDelete: Cascade)
+  alertaInfraId  Int?          @map("alerta_infra_id")
+  alertaAppId    Int?          @map("alerta_app_id")
+  alertaInfra    AlertaInfra?  @relation("AlertaInfraGrupoAlertas", fields: [alertaInfraId], references: [id], onDelete: Cascade)
+  alertaApp      AlertaApp?    @relation("AlertaAppGrupoAlertas", fields: [alertaAppId], references: [id], onDelete: Cascade)
+
+  @@map("grupo_alerta")
 }
 
-model GroupAlert {
-  id              Int         @id @default(autoincrement())
-  groupId         Int
-  group           Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  infraAlertId    Int?
-  appAlertId      Int?
-  infra_alert     InfraAlert? @relation(fields: [infraAlertId], references: [id], onDelete: Cascade)
-  app_alert       AppAlert?   @relation(fields: [appAlertId], references: [id], onDelete: Cascade)
+model AlertaInfra {
+  id           Int      @id @default(autoincrement()) @map("id")
+  descricao    String   @map("descricao")
+  dataHora     DateTime @map("data_hora")
+  servidorId   Int
+  servidor     Servidor @relation("ServidorAlertasInfra", fields: [servidorId], references: [id], onDelete: Cascade)
+  grupoAlertas GrupoAlerta[] @relation("AlertaInfraGrupoAlertas")
+  @@map("alerta_infra")
 }
 
-model InfraAlert {
-  id              Int         @id @default(autoincrement())
-  cpu             Int?
-  saturation      Boolean?
-  linux_memory    Int?
-  windows_memory  Int?
-  disk_latency    Int?
-  disk_queue      Int?
-  disk_partition  Int?
-  network_packets BigInt?
-  serverId        Int
-  server          Server      @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  group_alerts    GroupAlert[]
+model AlertaApp {
+  id           Int      @id @default(autoincrement()) @map("id")
+  descricao    String   @map("descricao")
+  dataHora     DateTime @map("data_hora")
+  servidorId   Int
+  servidor     Servidor @relation("ServidorAlertasApp", fields: [servidorId], references: [id], onDelete: Cascade)
+  grupoAlertas GrupoAlerta[] @relation("AlertaAppGrupoAlertas")
+  @@map("alerta_app")
 }
 
-model AppAlert {
-  id         Int         @id @default(autoincrement())
-  cpu        Int?
-  ram_memory Int?
-  serverId   Int
-  server     Server      @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  group_alerts GroupAlert[]
-}
+model Contato {
+  id           Int      @id @default(autoincrement()) @map("id")
+  nome         String   @map("nome")
+  email        String   @map("email")
+  telefone     String   @map("telefone")
+  servidorId   Int
+  servidor     Servidor @relation("ServidorContatos", fields: [servidorId], references: [id], onDelete: Cascade)
 
-model Contact {
-  id        Int     @id @default(autoincrement())
-  email     String
-  phone     String
-  serverId  Int
-  alertId   Int
-  server    Server  @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  @@map("contato")
 }

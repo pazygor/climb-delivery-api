@@ -12,6 +12,6 @@ export class WhatsappController {
   }
   @Post('teste')
   teste() {
-    return this.whatsappService.teste("teste de requisição123");
+    return this.whatsappService.teste("teste de requisição123456");
   }
 }
