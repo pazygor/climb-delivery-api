@@ -1,26 +1,60 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service'; // ajuste o path conforme seu projeto
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 
 @Injectable()
 export class CompanyService {
-  create(createCompanyDto: CreateCompanyDto) {
-    return 'This action adds a new company';
+  constructor(private readonly prisma: PrismaService) { }
+
+  async create(dto: CreateCompanyDto) {
+    const data = {
+      ...dto,
+      dataAdesao: new Date(dto.dataAdesao),
+      horaAdesao: new Date(`1970-01-01T${dto.horaAdesao}`),
+    };
+
+    return this.prisma.empresa.create({ data });
   }
 
-  findAll() {
-    return `This action returns all company`;
+  async findAll() {
+    return this.prisma.empresa.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} company`;
+  async findOne(id: number) {
+    const company = await this.prisma.empresa.findUnique({ where: { id } });
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+    return company;
   }
 
-  update(id: number, updateCompanyDto: UpdateCompanyDto) {
-    return `This action updates a #${id} company`;
+  async update(id: number, dto: UpdateCompanyDto) {
+    const company = await this.prisma.empresa.findUnique({ where: { id } });
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    let data: any = { ...dto };
+
+    if (dto.dataAdesao) {
+      data.dataAdesao = new Date(dto.dataAdesao);
+    }
+    if (dto.horaAdesao) {
+      data.horaAdesao = new Date(`1970-01-01T${dto.horaAdesao}`);
+    }
+
+    return this.prisma.empresa.update({
+      where: { id },
+      data,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} company`;
+  async remove(id: number) {
+    const company = await this.prisma.empresa.findUnique({ where: { id } });
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+    return this.prisma.empresa.delete({ where: { id } });
   }
 }
