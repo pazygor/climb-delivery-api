@@ -18,7 +18,13 @@ export class CompanyService {
   }
 
   async findAll() {
-    return this.prisma.empresa.findMany();
+    const companies = await this.prisma.empresa.findMany();
+    return companies.map((company) => ({
+      ...company,
+      horaAdesao: company.horaAdesao
+        ? company.horaAdesao.toTimeString().split(' ')[0] // pega só "HH:MM:SS"
+        : null,
+    }));
   }
 
   async findOne(id: number) {
@@ -26,7 +32,13 @@ export class CompanyService {
     if (!company) {
       throw new NotFoundException('Company not found');
     }
-    return company;
+
+    return {
+      ...company,
+      horaAdesao: company.horaAdesao
+        ? company.horaAdesao.toTimeString().split(' ')[0]
+        : null,
+    };
   }
 
   async update(id: number, dto: UpdateCompanyDto) {
