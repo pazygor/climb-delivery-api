@@ -69,4 +69,34 @@ export class CompanyService {
     }
     return this.prisma.empresa.delete({ where: { id } });
   }
+
+  async getProdutosDisponiveis(empresaId: number) {
+    return this.prisma.empresaProduto.findMany({
+      where: {
+        empresa_id: empresaId,
+        status: 'ativo', // filtra apenas os produtos ativos para essa empresa
+      },
+      include: {
+        produto: true, // traz os dados do produto associado
+      },
+    });
+  }
+  async getLimitesDaEmpresa(empresaId: number) {
+    const empresa = await this.prisma.empresa.findUnique({
+      where: { id: empresaId },
+      select: {
+        limiteProjetos: true,
+        limiteServidores: true
+      }
+    });
+
+    if (!empresa) {
+      throw new NotFoundException(`Empresa com id ${empresaId} não encontrada.`);
+    }
+
+    return {
+      limiteProjetos: empresa.limiteProjetos,
+      limiteServidores: empresa.limiteServidores
+    };
+  }
 }

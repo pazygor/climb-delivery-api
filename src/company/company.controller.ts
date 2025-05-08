@@ -34,4 +34,12 @@ export class CompanyController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.companyService.remove(id);
   }
+  @Get(':id/produtos')
+  getProdutosDisponiveis(@Param('id') empresaId: string) {
+    return this.companyService.getProdutosDisponiveis(+empresaId);
+  }
+  @Get(':id/limites')
+  getLimitesDaEmpresa(@Param('id') empresaId: string) {
+    return this.companyService.getLimitesDaEmpresa(+empresaId);
+  }
 }

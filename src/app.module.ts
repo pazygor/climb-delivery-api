@@ -14,9 +14,13 @@ import { GroupAlertModule } from './group-alert/group-alert.module';
 import { InfraAlertModule } from './infra-alert/infra-alert.module';
 import { AppAlertModule } from './app-alert/app-alert.module';
 import { AuthModule } from './auth/auth.module';
+import { MonitorModule } from './monitor/monitor.module';
+import { ExternalModule } from './external/external.module';
+import { ProductModule } from './product/product.module';
+import { CompanyProductModule } from './company-product/company-product.module';
 
 @Module({
-  imports: [ContactsModule, WhatsappModule, EmailModule, ProjectsModule, ServersModule, CompanyModule, UserModule, GroupModule, GroupUserModule, GroupAlertModule, InfraAlertModule, AppAlertModule, AuthModule],
+  imports: [ContactsModule, WhatsappModule, EmailModule, ProjectsModule, ServersModule, CompanyModule, UserModule, GroupModule, GroupUserModule, GroupAlertModule, InfraAlertModule, AppAlertModule, AuthModule, MonitorModule, ExternalModule, ProductModule, CompanyProductModule],
   controllers: [AppController],
   providers: [AppService],
 })
