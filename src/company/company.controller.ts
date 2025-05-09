@@ -42,4 +42,8 @@ export class CompanyController {
   getLimitesDaEmpresa(@Param('id') empresaId: string) {
     return this.companyService.getLimitesDaEmpresa(+empresaId);
   }
+  @Get('usuario/:usuarioId')
+  getProdutosEmpresaDisponiveisPorUsuarioId(@Param('usuarioId') usuarioId: string) {
+    return this.companyService.getProdutosEmpresaDisponiveisPorUsuarioId(+usuarioId);
+  }
 }

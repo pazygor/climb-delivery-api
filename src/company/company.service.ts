@@ -99,4 +99,25 @@ export class CompanyService {
       limiteServidores: empresa.limiteServidores
     };
   }
+  async getProdutosEmpresaDisponiveisPorUsuarioId(usuarioId: number) {
+    const empresa = await this.prisma.usuario.findUnique({
+      where: { id: usuarioId },
+      select: { empresa: true },
+    });
+
+    if (!empresa) {
+      throw new NotFoundException(`Usuário com id ${usuarioId} não encontrado.`);
+    }
+
+    const empresa_id = empresa.empresa.id;
+    return this.prisma.empresaProduto.findMany({
+      where: {
+        empresa_id,
+        status: 'ativo', // filtra apenas os produtos ativos para essa empresa
+      },
+      include: {
+        produto: true, // traz os dados do produto associado
+      },
+    });
+  }
 }
