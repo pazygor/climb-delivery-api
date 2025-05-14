@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Projeto } from '@prisma/client';
 import { CreateMonitorDto } from './dto/create-monitor.dto';
 import { UpdateMonitorDto } from './dto/update-monitor.dto';
 
@@ -62,7 +63,7 @@ export class MonitorService {
       where: { id: usuarioId },
       select: { empresa: true },
     });
-  
+
     if (!empresa) {
       throw new NotFoundException(`Usuário com id ${usuarioId} não encontrado.`);
     }
@@ -71,5 +72,120 @@ export class MonitorService {
     return this.prisma.monitoramento.findMany({
       where: { empresa_id: empresa_id },
     });
+  }
+  async createMonitoramentoCompleto(dados: any) {
+    const { monitoramento, projetos } = dados;
+
+    const tipoColeta = monitoramento.tipo_coleta;
+    const empresaId = monitoramento.empresa_id;
+
+    const empresa = await this.prisma.empresa.findUnique({
+      where: { id: empresaId },
+      select: {
+        limiteProjetos: true,
+        limiteServidores: true,
+        env: true,
+        tenant: true
+      }
+    });
+
+    if (!empresa) {
+      throw new Error('Empresa não encontrada.');
+    }
+
+    const totalProjetosNovo = projetos.length;
+    const totalServidoresNovo = projetos.reduce((acc, proj) => acc + proj.servidores.length, 0);
+
+    const projetosAtuais = await this.prisma.projeto.count({
+      where: { empresaId: empresaId }
+    });
+
+    const servidoresAtuais = await this.prisma.servidor.count({
+      where: { empresaId: empresaId }
+    });
+
+    if (tipoColeta === 'SVS Monitor') {
+      if ((servidoresAtuais + totalServidoresNovo) > empresa.limiteServidores) {
+        throw new Error('Limite de servidores excedido.');
+      }
+    } else if (tipoColeta === 'SVS Insights') {
+      if ((projetosAtuais + totalProjetosNovo) > empresa.limiteProjetos) {
+        throw new Error('Limite de projetos excedido.');
+      }
+    }
+
+    
+
+    const projetosCriados: Projeto[] = [];
+    const servidoresCriados: any[] = [];
+
+    for (const proj of projetos) {
+      
+
+      const projetoCriado = await this.prisma.projeto.create({
+        data: {
+          nome: proj.nome,
+          env: empresa.env,
+          tenant: empresa.tenant,
+          dataInicio: new Date(),
+          status: 'ativo',
+          localArmazenamento: proj.local_armazenamento,
+          empresaId: empresaId
+        }
+      });
+
+      for (const srv of proj.servidores) {
+        const servidorCriado = await this.prisma.servidor.create({
+          data: {
+            nome: srv.nome,
+            ip: srv.ip,
+            tipo: srv.tipo || 'teste',
+            sistemaOperacional: srv.sistema_operacional,
+            status: 'ativo',
+            projetoId: projetoCriado.id,
+            empresaId: empresaId
+          }
+        });
+
+        servidoresCriados.push({
+          id: servidorCriado.id,
+          nome: servidorCriado.nome,
+          ip: servidorCriado.ip,
+          sistemaOperacional: servidorCriado.sistemaOperacional,
+          tipo: servidorCriado.tipo,
+          projetoId: servidorCriado.projetoId
+        });
+      }
+
+      projetosCriados.push({
+        ...projetoCriado,
+        localArmazenamento: proj.local_armazenamento,
+        env: empresa.env,
+        tenant: empresa.tenant
+      });
+    }
+
+    const listaProjetosJson = projetosCriados.map(p => ({
+      id: p.id,
+      nome: p.nome,
+      env: p.env,
+      tenant: p.tenant,
+      localArmazenamento: p.localArmazenamento
+    }));
+
+    const listaServidoresJson = servidoresCriados;
+
+    const monitoramentoCriado = await this.prisma.monitoramento.create({
+      data: {
+        empresa_id: empresaId,
+        nome_monitoramento: monitoramento.nome,
+        produto: tipoColeta,
+        projetos: listaProjetosJson,
+        servidores: listaServidoresJson,
+        status: 'ativo'
+      }
+    });
+
+    return monitoramentoCriado;
   }
 }

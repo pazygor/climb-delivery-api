@@ -8,6 +8,11 @@ export class ProjectsService {
   constructor(private prisma: PrismaService) { }
 
   create(createProjectDto: CreateProjectDto) {
+    // Verificar se empresaId foi fornecido e é válido
+    if (!createProjectDto.empresaId) {
+      throw new Error('O campo empresaId é obrigatório');
+    }
+
     return this.prisma.projeto.create({
       data: {
         ...createProjectDto,

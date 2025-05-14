@@ -46,8 +46,8 @@ model Projeto {
   env                 String     @map("env")
   tenant              String     @map("tenant")
   dataInicio          DateTime   @map("data_inicio")
-  usuarioProprietario String     @map("usuario_proprietario")
   status              String     @map("status")
+  localArmazenamento  String     @map("local_armazenamento") // ✅ Adicionado aqui
   empresaId           Int?       @map("empresa_id")
   empresa             Empresa?   @relation("EmpresaProjetos", fields: [empresaId], references: [id], onDelete: Cascade)
 

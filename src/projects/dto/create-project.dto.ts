@@ -13,12 +13,11 @@ export class CreateProjectDto {
     dataInicio: string;
 
     @IsString()
-    usuarioProprietario: string;
-
-    @IsString()
     status: string;
 
-    @IsOptional()
     @IsInt()
-    empresaId?: number;
+    empresaId: number; // Garantir que seja obrigatório
+
+    @IsString()
+    localArmazenamento: string;
 }

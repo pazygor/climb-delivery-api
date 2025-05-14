@@ -10,7 +10,10 @@ export class MonitorController {
   create(@Body() createMonitoramentoDto: CreateMonitorDto) {
     return this.monitorService.create(createMonitoramentoDto);
   }
-
+  @Post('monitor-completo')
+  createMonitoramentoCompleto(@Body() dados: any) {
+    return this.monitorService.createMonitoramentoCompleto(dados);
+  }
   @Get()
   findAll(@Query('empresaId') empresaId: string) {
     return this.monitorService.findAllByEmpresa(Number(empresaId));
