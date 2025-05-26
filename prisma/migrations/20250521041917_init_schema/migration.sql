@@ -12,7 +12,6 @@ CREATE TABLE `empresa` (
     `hora_adesao` TIME(0) NOT NULL,
     `tenant` VARCHAR(191) NOT NULL,
     `env` VARCHAR(191) NOT NULL,
-    `modo_contratado` VARCHAR(20) NOT NULL,
     `limite_projetos` INTEGER NOT NULL DEFAULT 0,
     `limite_servidores` INTEGER NOT NULL DEFAULT 0,
 
@@ -27,11 +26,10 @@ CREATE TABLE `projeto` (
     `env` VARCHAR(191) NOT NULL,
     `tenant` VARCHAR(191) NOT NULL,
     `data_inicio` DATETIME(3) NOT NULL,
-    `usuario_proprietario` VARCHAR(191) NOT NULL,
     `status` VARCHAR(191) NOT NULL,
+    `local_armazenamento` VARCHAR(191) NOT NULL,
     `empresa_id` INTEGER NULL,
 
-    UNIQUE INDEX `projeto_tenant_env_key`(`tenant`, `env`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -101,31 +99,16 @@ CREATE TABLE `grupo_alerta` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `alerta_parametro_app` (
+CREATE TABLE `alerta_parametros` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `servidorId` INTEGER NOT NULL,
-    `cpu` INTEGER NULL,
-    `saturation` BOOLEAN NULL,
-    `linux_memory` INTEGER NULL,
-    `windows_memory` INTEGER NULL,
-    `disk_latency` INTEGER NULL,
-    `disk_queue` INTEGER NULL,
-    `disk_partition` INTEGER NULL,
-    `network_packets` BIGINT NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `alerta_parametro_infra` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `servidorId` INTEGER NOT NULL,
-    `cpu` INTEGER NULL,
-    `memoria` INTEGER NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `server_id` INTEGER NOT NULL,
+    `empresa_id` INTEGER NOT NULL,
+    `metricas_id` INTEGER NOT NULL,
+    `criticidade_id` INTEGER NOT NULL,
+    `nome_campo` VARCHAR(191) NOT NULL,
+    `valor` DOUBLE NOT NULL,
+    `type` VARCHAR(191) NOT NULL,
+    `unidade_valor` VARCHAR(191) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -141,6 +124,76 @@ CREATE TABLE `alerta_usuario` (
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `produto` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `nome_produto` VARCHAR(191) NOT NULL,
+    `status` VARCHAR(191) NOT NULL DEFAULT 'ativo',
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `empresa_produto` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `empresa_id` INTEGER NOT NULL,
+    `produto_id` INTEGER NOT NULL,
+    `status` VARCHAR(191) NOT NULL DEFAULT 'ativo',
+    `contratado_em` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `empresa_produto_empresa_id_produto_id_key`(`empresa_id`, `produto_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `monitoramento` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `empresa_id` INTEGER NOT NULL,
+    `nome_monitoramento` VARCHAR(191) NOT NULL,
+    `produto` VARCHAR(191) NOT NULL,
+    `projetos` JSON NOT NULL,
+    `servidores` JSON NOT NULL,
+    `status` VARCHAR(191) NOT NULL DEFAULT 'ativo',
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `metricas` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `nome` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `criticidade` (
+    `id` INTEGER NOT NULL,
+    `nome` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Inserts fixos
+INSERT INTO `criticidade` (`id`, `nome`) VALUES
+  (0, 'Emergency'),
+  (1, 'Alert'),
+  (2, 'Critical'),
+  (3, 'Error'),
+  (4, 'Warning'),
+  (5, 'Notice'),
+  (6, 'Informational'),
+  (7, 'Debug');
+
+INSERT INTO `metricas` (`id`, `nome`) VALUES
+  (1, 'satura'),
+  (2, 'processo'),
+  (3, 'rede'),
+  (4, 'disco');
 
 -- AddForeignKey
 ALTER TABLE `projeto` ADD CONSTRAINT `projeto_empresa_id_fkey` FOREIGN KEY (`empresa_id`) REFERENCES `empresa`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -164,10 +217,25 @@ ALTER TABLE `grupo_usuario` ADD CONSTRAINT `grupo_usuario_grupo_id_fkey` FOREIGN
 ALTER TABLE `grupo_alerta` ADD CONSTRAINT `grupo_alerta_grupo_id_fkey` FOREIGN KEY (`grupo_id`) REFERENCES `grupo`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `alerta_parametro_app` ADD CONSTRAINT `alerta_parametro_app_servidorId_fkey` FOREIGN KEY (`servidorId`) REFERENCES `servidor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `alerta_parametros` ADD CONSTRAINT `alerta_parametros_server_id_fkey` FOREIGN KEY (`server_id`) REFERENCES `servidor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `alerta_parametro_infra` ADD CONSTRAINT `alerta_parametro_infra_servidorId_fkey` FOREIGN KEY (`servidorId`) REFERENCES `servidor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `alerta_parametros` ADD CONSTRAINT `alerta_parametros_empresa_id_fkey` FOREIGN KEY (`empresa_id`) REFERENCES `empresa`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `alerta_parametros` ADD CONSTRAINT `alerta_parametros_metricas_id_fkey` FOREIGN KEY (`metricas_id`) REFERENCES `metricas`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `alerta_parametros` ADD CONSTRAINT `alerta_parametros_criticidade_id_fkey` FOREIGN KEY (`criticidade_id`) REFERENCES `criticidade`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `alerta_usuario` ADD CONSTRAINT `alerta_usuario_servidorId_fkey` FOREIGN KEY (`servidorId`) REFERENCES `servidor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `empresa_produto` ADD CONSTRAINT `empresa_produto_empresa_id_fkey` FOREIGN KEY (`empresa_id`) REFERENCES `empresa`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `empresa_produto` ADD CONSTRAINT `empresa_produto_produto_id_fkey` FOREIGN KEY (`produto_id`) REFERENCES `produto`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `monitoramento` ADD CONSTRAINT `monitoramento_empresa_id_fkey` FOREIGN KEY (`empresa_id`) REFERENCES `empresa`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

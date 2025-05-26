@@ -38,4 +38,31 @@ export class ServersService {
       where: { id },
     });
   }
+  async getAlertDataByServer(serverId: number) {
+    // Busca os usuários de alerta
+    const contacts = await this.prisma.alertaUsuario.findMany({
+      where: { servidorId: serverId },
+    });
+
+    // Busca os parâmetros de alerta
+    const infraParameters = await this.prisma.alertaParametro.findMany({
+      where: { serverId: serverId },
+    });
+
+    // Exemplo: buscar parâmetro "ativo", se você tiver uma flag como `is_active` ou algo assim
+    // const activeInfraParameter = await this.prisma.alertaParametro.findFirst({
+    //   where: {
+    //     server_id: serverId,
+    //     ativo: true, // substitua pelo campo correto se for diferente
+    //   },
+    // });
+
+    return {
+      success: true,
+      data: {
+        contacts,
+        infraParameters,
+      },
+    };
+  }
 }

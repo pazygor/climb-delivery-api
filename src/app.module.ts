@@ -11,16 +11,17 @@ import { UserModule } from './user/user.module';
 import { GroupModule } from './group/group.module';
 import { GroupUserModule } from './group-user/group-user.module';
 import { GroupAlertModule } from './group-alert/group-alert.module';
-import { InfraAlertModule } from './infra-alert/infra-alert.module';
-import { AppAlertModule } from './app-alert/app-alert.module';
+
 import { AuthModule } from './auth/auth.module';
 import { MonitorModule } from './monitor/monitor.module';
 import { ExternalModule } from './external/external.module';
 import { ProductModule } from './product/product.module';
 import { CompanyProductModule } from './company-product/company-product.module';
+import { AlertUserModule } from './alert-user/alert-user.module';
+import { AlertParamsModule } from './alert-params/alert-params.module';
 
 @Module({
-  imports: [ContactsModule, WhatsappModule, EmailModule, ProjectsModule, ServersModule, CompanyModule, UserModule, GroupModule, GroupUserModule, GroupAlertModule, InfraAlertModule, AppAlertModule, AuthModule, MonitorModule, ExternalModule, ProductModule, CompanyProductModule],
+  imports: [ContactsModule, WhatsappModule, EmailModule, ProjectsModule, ServersModule, CompanyModule, UserModule, GroupModule, GroupUserModule, GroupAlertModule, AuthModule, MonitorModule, ExternalModule, ProductModule, CompanyProductModule, AlertUserModule, AlertParamsModule],
   controllers: [AppController],
   providers: [AppService],
 })

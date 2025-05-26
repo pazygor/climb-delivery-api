@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { InfraAlertService } from './infra-alert.service';
+import { AlertUserService } from './alert-user.service';
 
-describe('InfraAlertService', () => {
-  let service: InfraAlertService;
+describe('AlertUserService', () => {
+  let service: AlertUserService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [InfraAlertService],
+      providers: [AlertUserService],
     }).compile();
 
-    service = module.get<InfraAlertService>(InfraAlertService);
+    service = module.get<AlertUserService>(AlertUserService);
   });
 
   it('should be defined', () => {

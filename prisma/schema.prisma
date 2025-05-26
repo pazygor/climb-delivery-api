@@ -36,6 +36,7 @@ model Empresa {
   servidores Servidor[] @relation("EmpresaServidores")
   produtos EmpresaProduto[]
   monitoramentos Monitoramento[]
+  alertasParametros AlertaParametro[]
   @@unique([tenant, env], name: "tenant_env")
   @@map("empresa")
 }
@@ -53,7 +54,7 @@ model Projeto {
 
   servidores Servidor[] @relation("ProjetoServidores")
 
-  @@unique([tenant, env], name: "tenant_env")
+
   @@map("projeto")
 }
 
@@ -70,8 +71,8 @@ model Servidor {
   empresaId            Int           @map("empresa_id")
   empresa              Empresa       @relation("EmpresaServidores", fields: [empresaId], references: [id], onDelete: Cascade)
 
-  parametrosApp   AlertaParametroApp[]   @relation("ServidorAlertaParametroApp")
-  parametrosInfra AlertaParametroInfra[] @relation("ServidorAlertaParametroInfra")
+  // Novo relacionamento com AlertaParametro
+  parametrosAlerta     AlertaParametro[] // Um servidor pode ter vários parâmetros de alerta
   usuariosAlerta  AlertaUsuario[]        @relation("ServidorAlertaUsuario")
 
   @@map("servidor")
@@ -129,39 +130,24 @@ model GrupoAlerta {
   @@map("grupo_alerta")
 }
 
-model AlertaParametroApp {
-  id               Int       @id @default(autoincrement())
-  servidorId       Int
+model AlertaParametro {
+  id              Int          @id @default(autoincrement()) @map("id")
+  serverId        Int          @map("server_id")
+  empresaId       Int          @map("empresa_id")
+  metricasId      Int          @map("metricas_id")
+  criticidadeId   Int          @map("criticidade_id")
+  nomeCampo       String       @map("nome_campo")
+  valor           Float        @map("valor")
+  type            String       @map("type") // 'app' ou 'infra'
+  unidadeValor    String       @map("unidade_valor")
 
-  cpu              Int?
-  saturation       Boolean?
-  linux_memory     Int?
-  windows_memory   Int?
-  disk_latency     Int?
-  disk_queue       Int?
-  disk_partition   Int?
-  network_packets  BigInt?
+  // Relações
+  servidor        Servidor     @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  empresa         Empresa      @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  metrica         Metrica      @relation(fields: [metricasId], references: [id], onDelete: Cascade)
+  criticidade     Criticidade  @relation(fields: [criticidadeId], references: [id], onDelete: Cascade)
 
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-
-  servidor     Servidor  @relation("ServidorAlertaParametroApp", fields: [servidorId], references: [id], onDelete: Cascade)
-
-  @@map("alerta_parametro_app")
-}
-
-model AlertaParametroInfra {
-  id               Int       @id @default(autoincrement())
-  servidorId       Int
-  cpu              Int?      // % de CPU geral
-  memoria          Int?      // % de memória RAM geral
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-
-  servidor     Servidor  @relation("ServidorAlertaParametroInfra", fields: [servidorId], references: [id], onDelete: Cascade)
-
-  @@map("alerta_parametro_infra")
-  
+  @@map("alerta_parametros")
 }
 
 model AlertaUsuario {
@@ -217,3 +203,18 @@ model Monitoramento {
   empresa           Empresa  @relation(fields: [empresa_id], references: [id])
   @@map("monitoramento")
 } 
+model Metrica {
+  id               Int                @id @default(autoincrement()) @map("id")
+  nome             String            @map("nome")
+
+  parametros       AlertaParametro[] // relação reversa
+  @@map("metricas")
+}
+
+model Criticidade {
+  id               Int                @id @map("id") // Remova o @default(autoincrement())
+  nome             String            @map("nome")
+
+  parametros       AlertaParametro[] // relação reversa
+  @@map("criticidade")
+}

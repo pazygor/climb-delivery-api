@@ -34,4 +34,9 @@ export class ServersController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.serversService.remove(id);
   }
+  @Get('alert_data_server/:id')
+  async getAlertDataByServer(@Param('id', ParseIntPipe) id: number) {
+    //return console.log(id);
+     return this.serversService.getAlertDataByServer(id);
+  }
 }
