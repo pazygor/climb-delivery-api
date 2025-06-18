@@ -44,7 +44,7 @@ jobs:
         run: npm run build
 
       - name: Create deployment artifact
-        run: zip -r release.zip ./* -x "node_modules/*"
+        run: zip -r release.zip ./*  # Removido -x "node_modules/*"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -59,8 +59,8 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -78,6 +78,16 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9C8370C8CD214320B74F5CCF24BC2071 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_38EA09C904E4471CA5FDE7109999168D }}
 
+      - name: 'Set Node.js version in Azure'
+        uses: azure/appservice-settings@v2
+        with:
+          app-name: 'svs-api'
+          slot-name: 'Production'
+          app-settings-json: |
+            {
+              "WEBSITE_NODE_DEFAULT_VERSION": "20.x"
+            }
+
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
@@ -85,4 +95,3 @@ jobs:
           app-name: 'svs-api'
           slot-name: 'Production'
           package: .
-          
