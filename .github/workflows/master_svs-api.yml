@@ -8,7 +8,10 @@ on:
     branches:
       - master
   workflow_dispatch:
-
+env:  # 👈 Adicione variáveis globais
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  NODE_ENV: production
+  
 jobs:
   build:
     runs-on: ubuntu-latest
