@@ -29,7 +29,7 @@ jobs:
         run: npm install -g prisma
 
       - name: Install dependencies
-        run: npm ci --omit=dev
+        run: npm ci
 
       - name: Run Prisma commands
         run: |
