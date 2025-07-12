@@ -203,4 +203,92 @@ export class MonitorService {
 
     return monitoramentoCriado;
   }
+  async validarCriacaoMonitoramento(
+    empresaId: number,
+    tipo: 'SVS Monitor' | 'SVS Insights',
+    qtdNova: number,
+  ): Promise<{ permitido: boolean; motivo?: string }> {
+
+    // Busca a empresa para obter os limites
+    const empresa = await this.prisma.empresa.findUnique({
+      where: { id: empresaId },
+      select: {
+        limiteProjetos: true,
+        limiteServidores: true,
+      },
+    });
+
+    if (!empresa) {
+      return {
+        permitido: false,
+        motivo: 'Empresa não encontrada.',
+      };
+    }
+
+    // 🔍 Busca os monitoramentos da empresa
+    const monitoramentos = await this.prisma.monitoramento.findMany({
+      where: { empresa_id: empresaId },
+      select: {
+        projetos: true,
+        servidores: true,
+      },
+    });
+
+    let totalAtual = 0;
+
+    if (tipo === 'SVS Monitor') {
+      totalAtual = monitoramentos.reduce((acc, mon) => {
+        let servidores: any[] = [];
+
+        if (Array.isArray(mon.servidores)) {
+          servidores = mon.servidores;
+        } else if (typeof mon.servidores === 'string') {
+          try {
+            servidores = JSON.parse(mon.servidores);
+          } catch {
+            servidores = [];
+          }
+        }
+
+        return acc + servidores.length;
+      }, 0);
+
+      const limite = empresa.limiteServidores;
+
+      if (totalAtual + qtdNova > limite) {
+        return {
+          permitido: false,
+          motivo: `Limite de servidores excedido. Já possui ${totalAtual} e está tentando adicionar mais ${qtdNova}, mas o limite é ${limite}.`,
+        };
+      }
+    } else if (tipo === 'SVS Insights') {
+      totalAtual = monitoramentos.reduce((acc, mon) => {
+        let projetos: any[] = [];
+
+        if (Array.isArray(mon.projetos)) {
+          projetos = mon.projetos;
+        } else if (typeof mon.projetos === 'string') {
+          try {
+            projetos = JSON.parse(mon.projetos);
+          } catch {
+            projetos = [];
+          }
+        }
+
+        return acc + projetos.length;
+      }, 0);
+
+      const limite = empresa.limiteProjetos;
+
+      if (totalAtual + qtdNova > limite) {
+        return {
+          permitido: false,
+          motivo: `Limite de projetos excedido. Já possui ${totalAtual} e está tentando adicionar mais ${qtdNova}, mas o limite é ${limite}.`,
+        };
+      }
+    }
+
+    // ✅ Validação passou
+    return { permitido: true };
+  }
 }

@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Query, Param, Patch, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Param, Patch, Delete, UseGuards } from '@nestjs/common';
 import { MonitorService } from './monitor.service';
 import { CreateMonitorDto } from './dto/create-monitor.dto';
 import { UpdateMonitorDto } from './dto/update-monitor.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard'; // ajuste aqui
 
 @Controller('monitor')
 export class MonitorController {
@@ -13,6 +14,19 @@ export class MonitorController {
   @Post('monitor-completo')
   createMonitoramentoCompleto(@Body() dados: any) {
     return this.monitorService.createMonitoramentoCompleto(dados);
+  }
+  @Get('validar')
+  //@UseGuards(JwtAuthGuard)
+  async validarLimite(
+    @Query('tipo') tipo: 'SVS Monitor' | 'SVS Insights',
+    @Query('qtdNova') qtdNova: number,
+    @Query('empresaId') empresaId: number
+  ) {
+    return this.monitorService.validarCriacaoMonitoramento(
+      Number(empresaId),
+      tipo,
+      Number(qtdNova)
+    );
   }
   @Get()
   findAll(@Query('empresaId') empresaId: string) {
