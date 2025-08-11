@@ -7,7 +7,16 @@ import { UpdateProductDto } from './dto/update-product.dto';
 export class ProductService {
   constructor(private readonly prisma: PrismaService) { }
   async create(createProdutoDto: CreateProductDto) {
-    return this.prisma.produto.create({ data: createProdutoDto });
+    const { sistema_id, ...rest } = createProdutoDto;
+
+    return this.prisma.produto.create({
+      data: {
+        ...rest,
+        sistema: {
+          connect: { id: sistema_id },
+        },
+      },
+    });
   }
 
   async findAll() {

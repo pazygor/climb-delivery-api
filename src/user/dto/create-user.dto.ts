@@ -1,4 +1,7 @@
-import { IsString, IsEmail, IsInt, IsOptional, IsBoolean, IsDateString } from 'class-validator';
+import {
+    IsString, IsEmail, IsInt, IsOptional, IsBoolean, IsDateString, IsArray
+} from 'class-validator';
+
 export class CreateUserDto {
     @IsInt()
     empresaId: number;
@@ -16,9 +19,8 @@ export class CreateUserDto {
     @IsString()
     imagem?: string;
 
-    @IsOptional()
-    @IsInt()
-    permissao?: number;
+    @IsInt() // Obrigatório agora
+    permissaoId: number;
 
     @IsOptional()
     @IsString()
@@ -74,6 +76,17 @@ export class CreateUserDto {
 
     @IsOptional()
     @IsString()
-    throughPutUnit?: string
-    
+    throughPutUnit?: string;
+
+    // Novo campo para os produtos permitidos
+    @IsOptional()
+    @IsArray()
+    @IsInt({ each: true })
+    produtosPermitidos?: number[]; // IDs dos produtos
+
+    // Novo campo para os sistemas permitidos
+    @IsOptional()
+    @IsArray()
+    @IsInt({ each: true })
+    sistemasPermitidos?: number[]; // IDs dos sistemas
 }

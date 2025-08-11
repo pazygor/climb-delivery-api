@@ -14,6 +14,13 @@ export class AuthService {
   async validateUser(email: string, senha: string) {
     const user = await this.prisma.usuario.findUnique({
       where: { email },
+      include: {
+        usuarioProdutoSistemas: { // relação usuario_produto_sistema
+          include: {
+            produtoSistema: true // pega os detalhes do produto
+          }
+        }
+      }
     });
 
     if (!user) {
@@ -38,8 +45,14 @@ export class AuthService {
       empresaId: user.empresaId,
     };
 
+    const access_token = this.jwtService.sign(payload);
+
+    // Extrair só os produtosSistema para enviar no retorno
+    const produtosSistema = user.usuarioProdutoSistemas.map(up => up.produtoSistema);
+
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token,
+      produtosSistema,
     };
   }
 }

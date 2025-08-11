@@ -8,15 +8,48 @@ export class UserService {
   constructor(private readonly prisma: PrismaService) { }
 
   async create(createUserDto: CreateUserDto) {
-    const hashedPassword = await bcrypt.hash(createUserDto.senha, 10);
+    const {
+      produtosPermitidos = [], // Array de produtoId
+      sistemasPermitidos = [], // Novo array de produtoSistemaId
+      senha,
+      ...userData
+    } = createUserDto;
 
-    return this.prisma.usuario.create({
+    const hashedPassword = await bcrypt.hash(senha, 10);
+
+    // 1. Cria o usuário
+    const novoUsuario = await this.prisma.usuario.create({
       data: {
-        ...createUserDto,
+        ...userData,
         senha: hashedPassword,
       },
     });
+
+    // 2. Cria os relacionamentos com produtos (usuario_produto)
+    if (produtosPermitidos.length > 0) {
+      await this.prisma.usuarioProduto.createMany({
+        data: produtosPermitidos.map((produtoId) => ({
+          usuarioId: novoUsuario.id,
+          produtoId,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    // 3. Cria os relacionamentos com sistemas (usuario_produto_sistema)
+    if (sistemasPermitidos.length > 0) {
+      await this.prisma.usuarioProdutoSistema.createMany({
+        data: sistemasPermitidos.map((produtoSistemaId) => ({
+          usuarioId: novoUsuario.id,
+          produtoSistemaId,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    return novoUsuario;
   }
+
 
   findAll() {
     return this.prisma.usuario.findMany({

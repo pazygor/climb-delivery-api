@@ -19,10 +19,12 @@ import { ProductModule } from './product/product.module';
 import { CompanyProductModule } from './company-product/company-product.module';
 import { AlertUserModule } from './alert-user/alert-user.module';
 import { AlertParamsModule } from './alert-params/alert-params.module';
+import { UserProductModule } from './user-product/user-product.module';
+import { UserProductSystemModule } from './user-product-system/user-product-system.module';
 
 @Module({
-  imports: [ContactsModule, WhatsappModule, EmailModule, ProjectsModule, ServersModule, CompanyModule, UserModule, GroupModule, GroupUserModule, GroupAlertModule, AuthModule, MonitorModule, ExternalModule, ProductModule, CompanyProductModule, AlertUserModule, AlertParamsModule],
+  imports: [ContactsModule, WhatsappModule, EmailModule, ProjectsModule, ServersModule, CompanyModule, UserModule, GroupModule, GroupUserModule, GroupAlertModule, AuthModule, MonitorModule, ExternalModule, ProductModule, CompanyProductModule, AlertUserModule, AlertParamsModule, UserProductModule, UserProductSystemModule],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

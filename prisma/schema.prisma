@@ -31,6 +31,7 @@ model Empresa {
   usuarios   Usuario[] @relation("EmpresaUsuarios")
   projetos   Projeto[] @relation("EmpresaProjetos")
   servidores Servidor[] @relation("EmpresaServidores")
+  produtosSistemas       EmpresaProdutoSistema[]  
   produtos EmpresaProduto[]
   monitoramentos Monitoramento[]
   alertasParametros AlertaParametro[]
@@ -78,34 +79,67 @@ model Servidor {
 }
 
 model Usuario {
-  id             Int               @id @default(autoincrement()) @map("id")
-  empresaId      Int               @map("empresa")
-  nome           String            @map("nome")
-  senha          String            @map("senha")
-  email          String            @unique @map("email")
-  imagem         String?           @map("imagem")
-  permissao      Int?              @map("permissao")
-  updatedAt      DateTime          @default(now()) @updatedAt @map("updated_at")
-  createdAt      DateTime          @default(now()) @map("created_at")
-  token          String?           @map("token")
-  ativo          Boolean           @default(true) @map("ativo")
-  loginAtivo     Boolean?          @map("login_ativo")
-  motivo         String?           @map("motivo")
-  validade       DateTime?         @map("validade")
-  perfil         Int?              @map("perfil")
-  celular        String?           @map("celular")
-  cadastro       Int?              @map("cadastro")
-  account        String?           @map("account")
-  emailLanguage  String?           @map("email_language")
-  appLanguage    String?           @map("app_language")
-  country        String?           @map("country")
-  autoProjectCreation Boolean?     @map("auto_project_creation")
-  throughPutUnit      String?      @map("through_put_unit")
-  
-  empresa        Empresa           @relation("EmpresaUsuarios", fields: [empresaId], references: [id])
-  grupoUsuarios  GrupoUsuario[]    @relation("GrupoUsuarios")
+  id             Int                     @id @default(autoincrement()) @map("id")
+  empresaId      Int                     @map("empresa")
+  nome           String                  @map("nome")
+  senha          String                  @map("senha")
+  email          String                  @unique @map("email")
+  imagem         String?                 @map("imagem")
+  permissaoId    Int                     @map("permissao")
+  permissao      Permissao               @relation("PermissaoUsuarios", fields: [permissaoId], references: [id])
+  updatedAt      DateTime                @default(now()) @updatedAt @map("updated_at")
+  createdAt      DateTime                @default(now()) @map("created_at")
+  token          String?                 @map("token")
+  ativo          Boolean                 @default(true) @map("ativo")
+  loginAtivo     Boolean?                @map("login_ativo")
+  motivo         String?                 @map("motivo")
+  validade       DateTime?               @map("validade")
+  perfil         Int?                    @map("perfil")
+  celular        String?                 @map("celular")
+  cadastro       Int?                    @map("cadastro")
+  account        String?                 @map("account")
+  emailLanguage  String?                 @map("email_language")
+  appLanguage    String?                 @map("app_language")
+  country        String?                 @map("country")
+  autoProjectCreation Boolean?           @map("auto_project_creation")
+  throughPutUnit      String?            @map("through_put_unit")
+
+  empresa        Empresa                 @relation("EmpresaUsuarios", fields: [empresaId], references: [id])
+  grupoUsuarios  GrupoUsuario[]          @relation("GrupoUsuarios")
+  usuarioProdutos UsuarioProduto[]       // Relação com os produtos permitidos
+  usuarioProdutoSistemas UsuarioProdutoSistema[] @relation("UsuarioToProdutoSistema")
 
   @@map("usuarios")
+}
+model UsuarioProduto {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int
+  produtoId  Int
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  produto    Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, produtoId])
+  @@map("usuario_produto")
+}
+model UsuarioProdutoSistema {
+  id               Int               @id @default(autoincrement())
+  usuarioId        Int
+  produtoSistemaId Int
+
+  usuario         Usuario         @relation("UsuarioToProdutoSistema", fields: [usuarioId], references: [id], onDelete: Cascade)
+  produtoSistema  ProdutoSistema  @relation("ProdutoSistemaToUsuario", fields: [produtoSistemaId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, produtoSistemaId])
+  @@map("usuario_produto_sistema")
+}
+model Permissao {
+  id        Int       @id @default(autoincrement())
+  nome      String    @unique              // Ex: admin_global, admin_cliente, usuario, viewer
+  descricao String?
+
+  usuarios  Usuario[] @relation("PermissaoUsuarios")
+
+  @@map("permissao")
 }
 model Grupo {
   id          Int              @id @default(autoincrement()) @map("id")
@@ -172,13 +206,25 @@ model AlertaUsuario {
   @@map("alerta_usuario")
 }
 
+model ProdutoSistema {
+  id                       Int                      @id @default(autoincrement())
+  nome                     String                   @unique
+  produtos                 Produto[]
+  usuarioProdutoSistemas   UsuarioProdutoSistema[] @relation("ProdutoSistemaToUsuario")
+  empresas               EmpresaProdutoSistema[]  
+  @@map("produto_sistema")
+}
+
 model Produto {
-  id            Int            @id @default(autoincrement())
-  nome_produto  String
-  status        String         @default("ativo") // ativo, inativo, etc.
-  empresas      EmpresaProduto[]
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @updatedAt
+  id               Int               @id @default(autoincrement())
+  nome_produto     String
+  status           String            @default("ativo") // ativo, inativo
+  sistema_id       Int               // Chave estrangeira para ProdutoSistema
+  sistema          ProdutoSistema    @relation(fields: [sistema_id], references: [id])
+  empresas         EmpresaProduto[]  // Empresas que contrataram este produto
+  usuarioProdutos UsuarioProduto[] // 👈 Adicione esta linha
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @updatedAt
   @@map("produto")
 }
 
@@ -195,7 +241,17 @@ model EmpresaProduto {
   @@unique([empresa_id, produto_id]) // uma empresa não pode ter o mesmo produto repetido
   @@map("empresa_produto")
 }
+model EmpresaProdutoSistema {
+  id               Int               @id @default(autoincrement())
+  empresaId        Int
+  produtoSistemaId Int
 
+  empresa          Empresa           @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  produtoSistema   ProdutoSistema    @relation(fields: [produtoSistemaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, produtoSistemaId])
+  @@map("empresa_produto_sistema")
+}
 model Monitoramento {
   id                Int      @id @default(autoincrement())
   empresa_id        Int

@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsInt } from 'class-validator';
+
 export class CreateProductDto {
     @IsNotEmpty()
     @IsString()
@@ -7,4 +8,8 @@ export class CreateProductDto {
     @IsOptional()
     @IsString()
     status?: string;
+
+    @IsNotEmpty()
+    @IsInt()
+    sistema_id: number; // 👈 adicionado para permitir usar no service
 }
