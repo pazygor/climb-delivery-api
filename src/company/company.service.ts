@@ -130,7 +130,16 @@ export class CompanyService {
         status: 'ativo', // filtra apenas os produtos ativos para essa empresa
       },
       include: {
-        produto: true, // traz os dados do produto associado
+        produto: {
+          select: {
+            id: true,
+            nome_produto: true,
+            status: true,
+            created_at: true,
+            updated_at: true,
+            // NÃO inclua sistema_id aqui
+          },
+        }, // traz os dados do produto associado
       },
     });
   }
