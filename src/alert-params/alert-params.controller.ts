@@ -3,9 +3,11 @@ import { AlertParamsService } from './alert-params.service';
 import { CreateAlertParamDto } from './dto/create-alert-param.dto';
 import { UpdateAlertParamDto } from './dto/update-alert-param.dto';
 import { ExternalAlertArrayDto } from './dto/external-alert.dto';
+import { ProtheusAlertsService } from './protheus-alerts.service';
+import { ProtheusAlertDto } from './dto/protheus-alert.dto';
 @Controller('alert-params')
 export class AlertParamsController {
-  constructor(private readonly alertParamsService: AlertParamsService) { }
+  constructor(private readonly alertParamsService: AlertParamsService, private readonly protheusAlertsService: ProtheusAlertsService) { }
 
   @Post()
   create(@Body() createAlertParamDto: CreateAlertParamDto) {
@@ -50,5 +52,11 @@ export class AlertParamsController {
       throw new BadRequestException('Payload vazio');
     }
     return this.alertParamsService.processExternalAlerts(alerts);
+  }
+
+  @Post('incoming-protheus')
+  async handleIncomingProtheus(@Body() alert: ProtheusAlertDto) {
+    //return console.log(alert);
+    return this.protheusAlertsService.processProtheusAlerts(alert);
   }
 }
