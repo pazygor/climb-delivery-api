@@ -26,26 +26,26 @@ export class UserService {
     });
 
     // 2. Cria os relacionamentos com produtos (usuario_produto)
-    if (produtosPermitidos.length > 0) {
-      await this.prisma.usuarioProduto.createMany({
-        data: produtosPermitidos.map((produtoId) => ({
-          usuarioId: novoUsuario.id,
-          produtoId,
-        })),
-        skipDuplicates: true,
-      });
-    }
+    // if (produtosPermitidos.length > 0) {
+    //   await this.prisma.usuarioProduto.createMany({
+    //     data: produtosPermitidos.map((produtoId) => ({
+    //       usuarioId: novoUsuario.id,
+    //       produtoId,
+    //     })),
+    //     skipDuplicates: true,
+    //   });
+    // }
 
     // 3. Cria os relacionamentos com sistemas (usuario_produto_sistema)
-    if (sistemasPermitidos.length > 0) {
-      await this.prisma.usuarioProdutoSistema.createMany({
-        data: sistemasPermitidos.map((produtoSistemaId) => ({
-          usuarioId: novoUsuario.id,
-          produtoSistemaId,
-        })),
-        skipDuplicates: true,
-      });
-    }
+    // if (sistemasPermitidos.length > 0) {
+    //   await this.prisma.usuarioProdutoSistema.createMany({
+    //     data: sistemasPermitidos.map((produtoSistemaId) => ({
+    //       usuarioId: novoUsuario.id,
+    //       produtoSistemaId,
+    //     })),
+    //     skipDuplicates: true,
+    //   });
+    // }
 
     return novoUsuario;
   }
@@ -58,25 +58,11 @@ export class UserService {
         empresaId: true,
         nome: true,
         email: true,
-        imagem: true,
         permissao: true,
         updatedAt: true,
         createdAt: true,
-        token: true,
         ativo: true,
-        loginAtivo: true,
-        motivo: true,
-        validade: true,
-        perfil: true,
-        celular: true,
-        cadastro: true,
         senha: true,
-        account: true,
-        emailLanguage: true,
-        appLanguage: true,
-        country: true,
-        autoProjectCreation: true,
-        throughPutUnit: true
       },
     });
   }
@@ -89,25 +75,11 @@ export class UserService {
         empresaId: true,
         nome: true,
         email: true,
-        imagem: true,
         permissao: true,
         updatedAt: true,
         createdAt: true,
-        token: true,
         ativo: true,
-        loginAtivo: true,
-        motivo: true,
-        validade: true,
-        perfil: true,
-        celular: true,
-        cadastro: true,
         senha: true,
-        account: true,
-        emailLanguage: true,
-        appLanguage: true,
-        country: true,
-        autoProjectCreation: true,
-        throughPutUnit: true
       },
     });
   }

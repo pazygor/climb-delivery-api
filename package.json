@@ -92,6 +92,9 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"

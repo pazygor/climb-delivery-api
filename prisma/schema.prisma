@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,341 +10,271 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Empresa {
-  id               Int         @id @default(autoincrement()) @map("id")
-  cnpj             String      @db.VarChar(14) @map("cnpj")
-  razaoSocial      String      @map("razao_social")
-  cidade           String      @map("cidade")
-  uf               String      @db.VarChar(2) @map("uf")
-  endereco         String      @map("endereco")
-  bairro           String      @map("bairro")
-  cep              String      @map("cep")
-  dataAdesao       DateTime    @db.Date @map("data_adesao")
-  horaAdesao       DateTime    @db.Time(0) @map("hora_adesao")
-  tenant           String      @map("tenant")
-  limiteProjetos   Int         @default(0) @map("limite_projetos")
-  limiteServidores Int         @default(0) @map("limite_servidores")
+// ============================================
+// TABELAS CORE DO SISTEMA
+// ============================================
 
-  usuarios   Usuario[] @relation("EmpresaUsuarios")
-  projetos   Projeto[] @relation("EmpresaProjetos")
-  servidores Servidor[] @relation("EmpresaServidores")
-  produtosSistemas       EmpresaProdutoSistema[]  
-  produtos EmpresaProduto[]
-  monitoramentos Monitoramento[]
-  alertasParametros AlertaParametro[]
-  operadoresDeploy DP0[]       @relation("EmpresaDP0") // <- adicionando relação com DP0
-  operadorcoesDeploy DP1[]       @relation("EmpresaDP1") // <- adicionando relação com DP1
-  tarefasDeploy DP2[]       @relation("EmpresaDP2") // <- adicionando relação com DP2
-  serversDeploy DP3[]       @relation("EmpresaDP3") // <- adicionando relação com DP3
+model Empresa {
+  id               Int         @id @default(autoincrement())
+  cnpj             String      @unique @db.VarChar(14)
+  razaoSocial      String      @map("razao_social")
+  nomeFantasia     String?     @map("nome_fantasia")
+  telefone         String?
+  email            String?
+  // Endereço
+  endereco         String
+  numero           String?
+  complemento      String?
+  bairro           String
+  cidade           String
+  uf               String      @db.VarChar(2)
+  cep              String      @db.VarChar(8)
+  // Configurações
+  ativo            Boolean     @default(true)
+  logo             String?     @db.Text
+  horarioAbertura  String?     @map("horario_abertura")
+  horarioFechamento String?    @map("horario_fechamento")
+  taxaEntrega      Decimal     @default(0) @db.Decimal(10, 2) @map("taxa_entrega")
+  tempoMedioEntrega Int?       @map("tempo_medio_entrega") // em minutos
+  // Timestamps
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  usuarios         Usuario[]
+  categorias       Categoria[]
+  produtos         Produto[]
+  pedidos          Pedido[]
+  gruposAdicionais GrupoAdicional[]
+
   @@map("empresa")
 }
 
-model Projeto {
-  id                  Int        @id @default(autoincrement()) @map("id")
-  nome                String     @map("nome")
-  env                 String     @map("env")
-  tenant              String     @map("tenant")
-  dataInicio          DateTime   @map("data_inicio")
-  status              String     @map("status")
-  localArmazenamento  String     @map("local_armazenamento") // ✅ Adicionado aqui
-  empresaId           Int?       @map("empresa_id")
-  empresa             Empresa?   @relation("EmpresaProjetos", fields: [empresaId], references: [id], onDelete: Cascade)
-  monitoramentoProtheus Boolean @default(false) @map("monitoramento_protheus")
-  enabled               Boolean @default(false) @map("enabled")
-  servidores Servidor[] @relation("ProjetoServidores")
-
-
-  @@map("projeto")
-}
-
-model Servidor {
-  id                   Int           @id @default(autoincrement()) @map("id")
-  nome                 String        @map("nome")
-  ip                   String        @map("ip")
-  tipo                 String        @map("tipo")
-  sistemaOperacional   String        @map("sistema_operacional")
-  status               String        @map("status")
-  createdAt            DateTime      @default(now()) @map("created_at")
-  projetoId            Int           @map("projeto_id")
-  projeto              Projeto       @relation("ProjetoServidores", fields: [projetoId], references: [id], onDelete: Cascade)
-  empresaId            Int           @map("empresa_id")
-  empresa              Empresa       @relation("EmpresaServidores", fields: [empresaId], references: [id], onDelete: Cascade)
-  nomeUsuario          String?        @map("nome_usuario")
-  senhaUsuario         String?        @map("senha_usuario")
-  sudo               Boolean    @default(false) @map("sudo")
-  // Novo campo para environments e portas
-  data                 Json?            @map("data")
-
-  // Novo relacionamento com AlertaParametro
-  parametrosAlerta     AlertaParametro[] // Um servidor pode ter vários parâmetros de alerta
-  usuariosAlerta  AlertaUsuario[]        @relation("ServidorAlertaUsuario")
-
-  @@map("servidor")
-}
-
 model Usuario {
-  id             Int                     @id @default(autoincrement()) @map("id")
-  empresaId      Int                     @map("empresa")
-  nome           String                  @map("nome")
-  senha          String                  @map("senha")
-  email          String                  @unique @map("email")
-  imagem         String?                 @map("imagem")
-  permissaoId    Int                     @map("permissao")
-  permissao      Permissao               @relation("PermissaoUsuarios", fields: [permissaoId], references: [id])
-  updatedAt      DateTime                @default(now()) @updatedAt @map("updated_at")
-  createdAt      DateTime                @default(now()) @map("created_at")
-  token          String?                 @map("token")
-  ativo          Boolean                 @default(true) @map("ativo")
-  loginAtivo     Boolean?                @map("login_ativo")
-  motivo         String?                 @map("motivo")
-  validade       DateTime?               @map("validade")
-  perfil         Int?                    @map("perfil")
-  celular        String?                 @map("celular")
-  cadastro       Int?                    @map("cadastro")
-  account        String?                 @map("account")
-  emailLanguage  String?                 @map("email_language")
-  appLanguage    String?                 @map("app_language")
-  country        String?                 @map("country")
-  autoProjectCreation Boolean?           @map("auto_project_creation")
-  throughPutUnit      String?            @map("through_put_unit")
+  id             Int          @id @default(autoincrement())
+  empresaId      Int          @map("empresa_id")
+  nome           String
+  email          String       @unique
+  senha          String
+  telefone       String?
+  cpf            String?      @unique @db.VarChar(11)
+  foto           String?      @db.Text
+  permissaoId    Int          @map("permissao_id")
+  ativo          Boolean      @default(true)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
 
-  empresa        Empresa                 @relation("EmpresaUsuarios", fields: [empresaId], references: [id])
-  grupoUsuarios  GrupoUsuario[]          @relation("GrupoUsuarios")
-  usuarioProdutos UsuarioProduto[]       // Relação com os produtos permitidos
-  usuarioProdutoSistemas UsuarioProdutoSistema[] @relation("UsuarioToProdutoSistema")
-  dp0Users       DP0[]                   @relation("UsuarioDP0") // relação reversa opcional
+  // Relacionamentos
+  empresa        Empresa      @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  permissao      Permissao    @relation(fields: [permissaoId], references: [id])
+  enderecos      Endereco[]
+  pedidos        Pedido[]
 
-  @@map("usuarios")
+  @@map("usuario")
 }
-model UsuarioProduto {
-  id         Int      @id @default(autoincrement())
-  usuarioId  Int
-  produtoId  Int
-  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  produto    Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
 
-  @@unique([usuarioId, produtoId])
-  @@map("usuario_produto")
-}
-model UsuarioProdutoSistema {
-  id               Int               @id @default(autoincrement())
-  usuarioId        Int
-  produtoSistemaId Int
-
-  usuario         Usuario         @relation("UsuarioToProdutoSistema", fields: [usuarioId], references: [id], onDelete: Cascade)
-  produtoSistema  ProdutoSistema  @relation("ProdutoSistemaToUsuario", fields: [produtoSistemaId], references: [id], onDelete: Cascade)
-
-  @@unique([usuarioId, produtoSistemaId])
-  @@map("usuario_produto_sistema")
-}
 model Permissao {
   id        Int       @id @default(autoincrement())
-  nome      String    @unique              // Ex: admin_global, admin_cliente, usuario, viewer
+  nome      String    @unique // admin, cliente, entregador
   descricao String?
 
-  usuarios  Usuario[] @relation("PermissaoUsuarios")
-  operadoresDP0 DP0[] // <- nova relação com a tabela DP0
+  usuarios  Usuario[]
 
   @@map("permissao")
 }
-model Grupo {
-  id          Int              @id @default(autoincrement()) @map("id")
-  nome        String           @map("nome")
-  descricao   String?          @map("descricao")
-  usuarios    GrupoUsuario[]   @relation("GrupoUsuarios")
-  alertas     GrupoAlerta[]    @relation("GrupoAlertas")
 
-  @@map("grupo")
-}
+// ============================================
+// TABELAS DE DELIVERY
+// ============================================
 
-model GrupoUsuario {
-  id        Int      @id @default(autoincrement()) @map("id")
-  usuarioId Int      @map("usuario_id")
-  grupoId   Int      @map("grupo_id")
-  usuario   Usuario  @relation("GrupoUsuarios", fields: [usuarioId], references: [id], onDelete: Cascade)
-  grupo     Grupo    @relation("GrupoUsuarios", fields: [grupoId], references: [id], onDelete: Cascade)
+model Categoria {
+  id          Int       @id @default(autoincrement())
+  empresaId   Int       @map("empresa_id")
+  nome        String
+  descricao   String?   @db.Text
+  ordem       Int       @default(0)
+  ativo       Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  @@map("grupo_usuario")
-}
+  empresa     Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  produtos    Produto[]
 
-model GrupoAlerta {
-  id             Int           @id @default(autoincrement()) @map("id")
-  grupoId        Int           @map("grupo_id")
-  grupo          Grupo         @relation("GrupoAlertas", fields: [grupoId], references: [id], onDelete: Cascade)
-
-  @@map("grupo_alerta")
-}
-
-model AlertaParametro {
-  id              Int          @id @default(autoincrement()) @map("id")
-  serverId        Int          @map("server_id")
-  empresaId       Int          @map("empresa_id")
-  metricasId      Int          @map("metricas_id")
-  criticidadeId   Int          @map("criticidade_id")
-  nomeCampo       String       @map("nome_campo")
-  valor           Float        @map("valor")
-  type            String       @map("type") // 'app' ou 'infra'
-  unidadeValor    String       @map("unidade_valor")
-  tenant          String       @map("tenant")
-  env             String       @map("env")
-  ip              String       @map("ip")
-
-  // Relações
-  servidor        Servidor     @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  empresa         Empresa      @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  metrica         Metrica      @relation(fields: [metricasId], references: [id], onDelete: Cascade)
-  criticidade     Criticidade  @relation(fields: [criticidadeId], references: [id], onDelete: Cascade)
-
-  @@map("alerta_parametros")
-}
-
-model AlertaUsuario {
-  id           Int       @id @default(autoincrement())
-  servidorId   Int
-  contato      String    // Email ou Telefone
-  grupo        String    // Ex: 'Infraestrutura', 'Aplicações', 'Banco de Dados', 'Geral'
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  servidor     Servidor  @relation("ServidorAlertaUsuario", fields: [servidorId], references: [id], onDelete: Cascade)
-  
-
-  @@map("alerta_usuario")
-}
-
-model ProdutoSistema {
-  id                       Int                      @id @default(autoincrement())
-  nome                     String                   @unique
-  produtos                 Produto[]
-  usuarioProdutoSistemas   UsuarioProdutoSistema[] @relation("ProdutoSistemaToUsuario")
-  empresas               EmpresaProdutoSistema[]  
-  @@map("produto_sistema")
+  @@map("categoria")
 }
 
 model Produto {
-  id               Int               @id @default(autoincrement())
-  nome_produto     String
-  status           String            @default("ativo") // ativo, inativo
-  sistema_id       Int               // Chave estrangeira para ProdutoSistema
-  sistema          ProdutoSistema    @relation(fields: [sistema_id], references: [id])
-  empresas         EmpresaProduto[]  // Empresas que contrataram este produto
-  usuarioProdutos UsuarioProduto[] // 👈 Adicione esta linha
-  created_at       DateTime          @default(now())
-  updated_at       DateTime          @updatedAt
+  id          Int         @id @default(autoincrement())
+  empresaId   Int         @map("empresa_id")
+  categoriaId Int         @map("categoria_id")
+  nome        String
+  descricao   String?     @db.Text
+  preco       Decimal     @db.Decimal(10, 2)
+  imagem      String?     @db.Text
+  disponivel  Boolean     @default(true)
+  destaque    Boolean     @default(false)
+  vendidoPorKg Boolean    @default(false) @map("vendido_por_kg")
+  ordem       Int         @default(0)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  empresa     Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  categoria   Categoria   @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  itensPedido ItemPedido[]
+  gruposProduto ProdutoGrupoAdicional[]
+
   @@map("produto")
 }
 
-model EmpresaProduto {
+// ============================================
+// SISTEMA DE ADICIONAIS
+// ============================================
+
+// Grupo de Adicionais (ex: "Pontos da Carne", "Adicionais", "Bebidas")
+model GrupoAdicional {
   id          Int       @id @default(autoincrement())
-  empresa_id  Int
-  produto_id  Int
-  status      String    @default("ativo") // ativo, suspenso, cancelado...
-  contratado_em DateTime @default(now())
-
-  empresa     Empresa   @relation(fields: [empresa_id], references: [id])
-  produto     Produto   @relation(fields: [produto_id], references: [id])
-
-  @@unique([empresa_id, produto_id]) // uma empresa não pode ter o mesmo produto repetido
-  @@map("empresa_produto")
-}
-model EmpresaProdutoSistema {
-  id               Int               @id @default(autoincrement())
-  empresaId        Int
-  produtoSistemaId Int
-
-  empresa          Empresa           @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  produtoSistema   ProdutoSistema    @relation(fields: [produtoSistemaId], references: [id], onDelete: Cascade)
-
-  @@unique([empresaId, produtoSistemaId])
-  @@map("empresa_produto_sistema")
-}
-model Monitoramento {
-  id                Int      @id @default(autoincrement())
-  empresa_id        Int
-  nome_monitoramento String
-  produto           String   // SVS Monitor ou SVS Insights
-  projetos          Json     // [{ id: 1, nome: "Projeto A" }, ...]
-  servidores        Json     // [{ id: 1, nome: "Servidor A", projetoId: 1 }, ...]
-  status            String   @default("ativo")
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-  url_download      String?   @db.Text 
-  
-  // Relacionamento (exemplo, ajuste se usa outro nome)
-  empresa           Empresa  @relation(fields: [empresa_id], references: [id])
-  @@map("monitoramento")
-} 
-model Metrica {
-  id               Int                @id @default(autoincrement()) @map("id")
-  nome             String            @map("nome")
-
-  parametros       AlertaParametro[] // relação reversa
-  @@map("metricas")
-}
-
-model Criticidade {
-  id               Int                @id @map("id") // Remova o @default(autoincrement())
-  nome             String            @map("nome")
-
-  parametros       AlertaParametro[] // relação reversa
-  @@map("criticidade")
-}
-model DP0 {
-  id          Int       @id @default(autoincrement()) @map("dp0_codope") // Código do operador
   empresaId   Int       @map("empresa_id")
-  oper        String    @map("dp0_oper")     // nome do operador
-  email       String    @map("dp0_email")      // email do operador
-  senha       String    @map("dp0_senha")      // senha do operador
-  permissaoId Int       @map("dp0_permissao")                // FK para permissões
-  grants      String    @map("dp0_grants")   // permissões extras (se precisar)
-  usergi      String?    @map("dp0_usergi")   // log inclusão
-  userga      String?    @map("dp0_userga")   // log alteração
-  usuarioId   Int?      @map("usuario_id") // FK para tabela usuario
-  // Relações
-  empresa     Empresa   @relation("EmpresaDP0", fields: [empresaId], references: [id], onDelete: Cascade)
-  permissao   Permissao @relation(fields: [permissaoId], references: [id])
-  usuario     Usuario?  @relation("UsuarioDP0", fields: [usuarioId], references: [id])
+  nome        String    // Ex: "Pontos da Carne", "Molhos", "Bebidas"
+  descricao   String?   @db.Text
+  minimo      Int       @default(0) // Quantidade mínima de adicionais
+  maximo      Int       @default(1) // Quantidade máxima de adicionais
+  obrigatorio Boolean   @default(false)
+  tipoPrecificacao String @default("somatorio") @map("tipo_precificacao") // somatorio, substitui
+  ordem       Int       @default(0)
+  ativo       Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  @@map("dp0")
-}
-model DP1 {
-  id          Int       @id @default(autoincrement()) @map("dp1_codope") // Código da operação
-  empresaId   Int       @map("empresa_id")
-  oper        String    @map("dp1_oper")     // nome da operadoração
-  usergi      String?    @map("dp1_usergi")   // log inclusão
-  userga      String?    @map("dp1_userga")   // log alteração
+  empresa     Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  adicionais  Adicional[]
+  produtos    ProdutoGrupoAdicional[]
 
-  // Relações
-  empresa     Empresa   @relation("EmpresaDP1", fields: [empresaId], references: [id], onDelete: Cascade)
-
-  @@map("dp1")
+  @@map("grupo_adicional")
 }
 
-model DP2 {
-  codtsk    Int      @map("dp2_codtsk")       // Código da tarefa (10, 20, 30…)
-  empresaId Int      @map("empresa_id")       // FK para empresa
-  task      String   @map("dp2_task")
-  tag       String?  @map("dp2_tag")
-  usergi    String?  @map("dp2_usergi")
-  userga    String?  @map("dp2_userga")
+// Adicionais dentro de cada grupo (ex: "Mal Passada", "Ao Ponto", "Bem Passada")
+model Adicional {
+  id              Int       @id @default(autoincrement())
+  grupoAdicionalId Int      @map("grupo_adicional_id")
+  nome            String    // Ex: "Mal Passada", "Bacon", "Queijo Extra"
+  descricao       String?   @db.Text
+  preco           Decimal   @default(0) @db.Decimal(10, 2)
+  ordem           Int       @default(0)
+  ativo           Boolean   @default(true)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  empresa   Empresa  @relation("EmpresaDP2", fields: [empresaId], references: [id], onDelete: Cascade)
+  grupoAdicional  GrupoAdicional @relation(fields: [grupoAdicionalId], references: [id], onDelete: Cascade)
+  itensAdicional  ItemAdicional[]
 
-  @@id([empresaId, codtsk]) // <-- chave composta
-  @@map("dp2")
+  @@map("adicional")
 }
 
-model DP3 {
-  codent    Int      @id @default(autoincrement()) @map("dp3_codent") // Código do agente (auto_increment)
-  empresaId Int      @map("empresa_id")                              // FK para empresa
-  nome      String   @map("dp3_nome")                // Nome do agente
-  ipsvs     String?  @map("dp3_ipsvs")               // IP do Server SVS
-  porta     String?  @map("dp3_porta")                // Porta do Server SVS
-  usergi    String?  @map("dp3_usergi")              // Log de inclusão
-  userga    String?  @map("dp3_userga")              // Log de alteração
+// Relacionamento entre Produto e Grupo de Adicionais (um produto pode ter vários grupos)
+model ProdutoGrupoAdicional {
+  id              Int       @id @default(autoincrement())
+  produtoId       Int       @map("produto_id")
+  grupoAdicionalId Int      @map("grupo_adicional_id")
+  ordem           Int       @default(0) // Ordem de exibição no produto
+  createdAt       DateTime  @default(now()) @map("created_at")
 
-  // Relação com Empresa
-  empresa   Empresa  @relation("EmpresaDP3", fields: [empresaId], references: [id], onDelete: Cascade)
+  produto         Produto   @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  grupoAdicional  GrupoAdicional @relation(fields: [grupoAdicionalId], references: [id], onDelete: Cascade)
 
-  @@map("dp3")
+  @@unique([produtoId, grupoAdicionalId])
+  @@map("produto_grupo_adicional")
+}
+
+// ============================================
+// TABELAS DE PEDIDOS
+// ============================================
+
+model Endereco {
+  id          Int       @id @default(autoincrement())
+  usuarioId   Int       @map("usuario_id")
+  titulo      String    // "Casa", "Trabalho", etc.
+  cep         String    @db.VarChar(8)
+  logradouro  String
+  numero      String
+  complemento String?
+  bairro      String
+  cidade      String
+  uf          String    @db.VarChar(2)
+  referencia  String?   @db.Text
+  principal   Boolean   @default(false)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  pedidos     Pedido[]
+
+  @@map("endereco")
+}
+
+model Pedido {
+  id                Int            @id @default(autoincrement())
+  empresaId         Int            @map("empresa_id")
+  usuarioId         Int            @map("usuario_id")
+  enderecoId        Int            @map("endereco_id")
+  numero            String         @unique
+  status            String         @default("pendente") // pendente, confirmado, preparando, saiu_entrega, entregue, cancelado
+  subtotal          Decimal        @db.Decimal(10, 2)
+  taxaEntrega       Decimal        @db.Decimal(10, 2) @map("taxa_entrega")
+  total             Decimal        @db.Decimal(10, 2)
+  formaPagamento    String         @map("forma_pagamento") // dinheiro, cartao, pix
+  observacoes       String?        @db.Text
+  motivoCancelamento String?       @db.Text @map("motivo_cancelamento")
+  tempoEstimado     Int?           @map("tempo_estimado") // em minutos
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+
+  empresa           Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  usuario           Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  endereco          Endereco       @relation(fields: [enderecoId], references: [id])
+  itens             ItemPedido[]
+  historico         HistoricoPedido[]
+
+  @@map("pedido")
+}
+
+model ItemPedido {
+  id          Int       @id @default(autoincrement())
+  pedidoId    Int       @map("pedido_id")
+  produtoId   Int       @map("produto_id")
+  quantidade  Int       @default(1)
+  precoUnitario Decimal @db.Decimal(10, 2) @map("preco_unitario")
+  subtotal    Decimal   @db.Decimal(10, 2)
+  observacoes String?   @db.Text
+
+  pedido      Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  produto     Produto   @relation(fields: [produtoId], references: [id])
+  adicionais  ItemAdicional[]
+
+  @@map("item_pedido")
+}
+
+// Adicionais escolhidos em cada item do pedido
+model ItemAdicional {
+  id            Int       @id @default(autoincrement())
+  itemPedidoId  Int       @map("item_pedido_id")
+  adicionalId   Int       @map("adicional_id")
+  quantidade    Int       @default(1)
+  preco         Decimal   @db.Decimal(10, 2) // Preço no momento do pedido
+
+  itemPedido    ItemPedido @relation(fields: [itemPedidoId], references: [id], onDelete: Cascade)
+  adicional     Adicional  @relation(fields: [adicionalId], references: [id])
+
+  @@map("item_adicional")
+}
+
+model HistoricoPedido {
+  id          Int       @id @default(autoincrement())
+  pedidoId    Int       @map("pedido_id")
+  status      String
+  observacao  String?   @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  pedido      Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  @@map("historico_pedido")
 }
