@@ -41,5 +41,9 @@ export class CreateProdutoDto {
 
   @IsOptional()
   @IsInt()
+  tempoPreparo?: number;
+
+  @IsOptional()
+  @IsInt()
   ordem?: number;
 }

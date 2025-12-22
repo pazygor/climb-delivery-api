@@ -13,6 +13,17 @@ export class AdicionalService {
     });
   }
 
+  async createBatch(createAdicionaisDto: CreateAdicionalDto[]) {
+    const results = await this.prisma.$transaction(
+      createAdicionaisDto.map((dto) =>
+        this.prisma.adicional.create({
+          data: dto,
+        }),
+      ),
+    );
+    return results;
+  }
+
   findAll() {
     return this.prisma.adicional.findMany({
       include: {

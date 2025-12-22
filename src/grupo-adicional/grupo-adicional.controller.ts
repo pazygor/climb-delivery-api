@@ -11,7 +11,7 @@ import { GrupoAdicionalService } from './grupo-adicional.service';
 import { CreateGrupoAdicionalDto } from './dto/create-grupo-adicional.dto';
 import { UpdateGrupoAdicionalDto } from './dto/update-grupo-adicional.dto';
 
-@Controller('grupo-adicional')
+@Controller('grupos-adicionais')
 export class GrupoAdicionalController {
   constructor(
     private readonly grupoAdicionalService: GrupoAdicionalService,

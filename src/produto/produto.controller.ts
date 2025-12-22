@@ -6,12 +6,15 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ProdutoService } from './produto.service';
 import { CreateProdutoDto } from './dto/create-produto.dto';
 import { UpdateProdutoDto } from './dto/update-produto.dto';
 
-@Controller('produto')
+@Controller('produtos')
 export class ProdutoController {
   constructor(private readonly produtoService: ProdutoService) {}
 
@@ -48,5 +51,14 @@ export class ProdutoController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.produtoService.remove(+id);
+  }
+
+  @Post(':id/imagem')
+  @UseInterceptors(FileInterceptor('imagem'))
+  uploadImagem(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.produtoService.uploadImagem(+id, file);
   }
 }

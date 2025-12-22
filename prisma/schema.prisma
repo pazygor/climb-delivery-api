@@ -114,6 +114,7 @@ model Produto {
   disponivel  Boolean     @default(true)
   destaque    Boolean     @default(false)
   vendidoPorKg Boolean    @default(false) @map("vendido_por_kg")
+  tempoPreparo Int?       @map("tempo_preparo") // Tempo de preparo em minutos
   ordem       Int         @default(0)
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
@@ -140,6 +141,9 @@ model GrupoAdicional {
   maximo      Int       @default(1) // Quantidade máxima de adicionais
   obrigatorio Boolean   @default(false)
   tipoPrecificacao String @default("somatorio") @map("tipo_precificacao") // somatorio, substitui
+  tipoSelecao String    @default("RADIO") @map("tipo_selecao") // RADIO ou CHECKBOX
+  minimoSelecao Int     @default(0) @map("minimo_selecao") // Para CHECKBOX
+  maximoSelecao Int     @default(1) @map("maximo_selecao") // Para CHECKBOX
   ordem       Int       @default(0)
   ativo       Boolean   @default(true)
   createdAt   DateTime  @default(now()) @map("created_at")

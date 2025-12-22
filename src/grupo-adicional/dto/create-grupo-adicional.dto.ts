@@ -28,6 +28,18 @@ export class CreateGrupoAdicionalDto {
   tipoPrecificacao?: string; // "somatorio" ou "substitui"
 
   @IsOptional()
+  @IsString()
+  tipoSelecao?: string; // "RADIO" ou "CHECKBOX"
+
+  @IsOptional()
+  @IsInt()
+  minimoSelecao?: number; // Para CHECKBOX
+
+  @IsOptional()
+  @IsInt()
+  maximoSelecao?: number; // Para CHECKBOX
+
+  @IsOptional()
   @IsInt()
   ordem?: number;
 

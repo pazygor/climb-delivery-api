@@ -11,7 +11,7 @@ import { EmpresaService } from './empresa.service';
 import { CreateEmpresaDto } from './dto/create-empresa.dto';
 import { UpdateEmpresaDto } from './dto/update-empresa.dto';
 
-@Controller('empresa')
+@Controller('empresas')
 export class EmpresaController {
   constructor(private readonly empresaService: EmpresaService) {}
 

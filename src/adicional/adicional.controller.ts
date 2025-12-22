@@ -11,13 +11,18 @@ import { AdicionalService } from './adicional.service';
 import { CreateAdicionalDto } from './dto/create-adicional.dto';
 import { UpdateAdicionalDto } from './dto/update-adicional.dto';
 
-@Controller('adicional')
+@Controller('adicionais')
 export class AdicionalController {
   constructor(private readonly adicionalService: AdicionalService) {}
 
   @Post()
   create(@Body() createAdicionalDto: CreateAdicionalDto) {
     return this.adicionalService.create(createAdicionalDto);
+  }
+
+  @Post('batch')
+  createBatch(@Body() createAdicionaisDto: CreateAdicionalDto[]) {
+    return this.adicionalService.createBatch(createAdicionaisDto);
   }
 
   @Get()

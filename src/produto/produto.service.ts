@@ -99,4 +99,17 @@ export class ProdutoService {
       where: { id },
     });
   }
+
+  async uploadImagem(id: number, file: Express.Multer.File) {
+    // Por enquanto, vamos salvar como base64 no banco
+    // Em produção, seria melhor usar S3, Cloudinary, etc.
+    const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+    
+    await this.prisma.produto.update({
+      where: { id },
+      data: { imagem: base64Image },
+    });
+
+    return { url: base64Image };
+  }
 }
