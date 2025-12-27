@@ -1,9 +1,12 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -54,6 +57,82 @@ export class AuthService {
     return {
       access_token,
       //produtosSistema,
+    };
+  }
+
+  /**
+   * Solicita recuperação de senha
+   * Gera um token único e salva no banco com data de expiração
+   */
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const user = await this.prisma.usuario.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (!user) {
+      // Por segurança, não revela se o email existe ou não
+      return {
+        message: 'Se o email existir em nossa base, você receberá um link de recuperação',
+      };
+    }
+
+    // Gera token único
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date();
+    resetTokenExpiry.setHours(resetTokenExpiry.getHours() + 1); // Token válido por 1 hora
+
+    // Atualiza usuário com token
+    await this.prisma.usuario.update({
+      where: { id: user.id },
+      data: {
+        resetToken,
+        resetTokenExpiry,
+      },
+    });
+
+    // TODO: Aqui você enviaria um email com o link de recuperação
+    // const resetLink = `${process.env.FRONTEND_URL}/login/reset-password/${resetToken}`;
+    // await this.emailService.sendPasswordResetEmail(user.email, resetLink);
+
+    console.log(`Token de recuperação gerado para ${user.email}: ${resetToken}`);
+
+    return {
+      message: 'Se o email existir em nossa base, você receberá um link de recuperação',
+    };
+  }
+
+  /**
+   * Redefine a senha usando o token
+   */
+  async resetPassword(dto: ResetPasswordDto) {
+    const user = await this.prisma.usuario.findFirst({
+      where: {
+        resetToken: dto.token,
+        resetTokenExpiry: {
+          gte: new Date(), // Token ainda não expirou
+        },
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Token inválido ou expirado');
+    }
+
+    // Hash da nova senha
+    const hashedPassword = await bcrypt.hash(dto.novaSenha, 10);
+
+    // Atualiza senha e limpa o token
+    await this.prisma.usuario.update({
+      where: { id: user.id },
+      data: {
+        senha: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+      },
+    });
+
+    return {
+      message: 'Senha redefinida com sucesso',
     };
   }
 }

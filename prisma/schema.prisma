@@ -61,6 +61,8 @@ model Usuario {
   foto           String?      @db.Text
   permissaoId    Int          @map("permissao_id")
   ativo          Boolean      @default(true)
+  resetToken     String?      @map("reset_token")
+  resetTokenExpiry DateTime?  @map("reset_token_expiry")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
