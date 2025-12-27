@@ -5,6 +5,7 @@ import {
   IsDecimal,
   IsArray,
   ValidateNested,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -19,7 +20,7 @@ class ItemAdicionalDto {
   preco: number;
 }
 
-class ItemPedidoDto {
+class ItemPedidoManualDto {
   @IsInt()
   produtoId: number;
 
@@ -43,21 +44,22 @@ class ItemPedidoDto {
   adicionais?: ItemAdicionalDto[];
 }
 
-export class CreatePedidoDto {
+export class CreatePedidoManualDto {
   @IsInt()
   empresaId: number;
 
   @IsInt()
   usuarioId: number;
 
-  @IsInt()
-  enderecoId: number;
+  @IsString()
+  enderecoEntrega: string; // Endereço completo como string
 
   @IsString()
   numero: string;
 
-  @IsInt()
-  statusId: number;
+  @IsOptional()
+  @IsString()
+  status?: string;
 
   @IsDecimal()
   subtotal: number;
@@ -73,14 +75,22 @@ export class CreatePedidoDto {
 
   @IsOptional()
   @IsString()
-  observacoes?: string;
+  observacoes?: string; // Inclui dados do cliente (nome, telefone)
 
   @IsOptional()
   @IsInt()
   tempoEstimado?: number;
 
+  @IsOptional()
+  @IsBoolean()
+  trocoNecessario?: boolean;
+
+  @IsOptional()
+  @IsDecimal()
+  valorTroco?: number;
+
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => ItemPedidoDto)
-  itens: ItemPedidoDto[];
+  @Type(() => ItemPedidoManualDto)
+  itens: ItemPedidoManualDto[];
 }

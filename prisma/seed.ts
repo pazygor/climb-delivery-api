@@ -11,6 +11,7 @@ async function main() {
   await prisma.itemPedido.deleteMany();
   await prisma.historicoPedido.deleteMany();
   await prisma.pedido.deleteMany();
+  await prisma.statusPedido.deleteMany();
   await prisma.endereco.deleteMany();
   await prisma.produtoGrupoAdicional.deleteMany();
   await prisma.adicional.deleteMany();
@@ -23,7 +24,80 @@ async function main() {
 
   console.log('✅ Dados antigos removidos');
 
-  // 1. Criar Permissões
+  // 1. Criar Status dos Pedidos
+  const statusPendente = await prisma.statusPedido.create({
+    data: {
+      codigo: 'pendente',
+      nome: 'Em Análise',
+      descricao: 'Pedido recebido e aguardando confirmação',
+      cor: '#f59e0b',
+      ordem: 1,
+    },
+  });
+
+  const statusConfirmado = await prisma.statusPedido.create({
+    data: {
+      codigo: 'confirmado',
+      nome: 'Confirmado',
+      descricao: 'Pedido confirmado e aguardando preparo',
+      cor: '#3b82f6',
+      ordem: 2,
+    },
+  });
+
+  const statusEmPreparo = await prisma.statusPedido.create({
+    data: {
+      codigo: 'em_preparo',
+      nome: 'Em Produção',
+      descricao: 'Pedido está sendo preparado',
+      cor: '#3b82f6',
+      ordem: 3,
+    },
+  });
+
+  const statusPronto = await prisma.statusPedido.create({
+    data: {
+      codigo: 'pronto',
+      nome: 'Pronto',
+      descricao: 'Pedido pronto para entrega',
+      cor: '#8b5cf6',
+      ordem: 4,
+    },
+  });
+
+  const statusEmEntrega = await prisma.statusPedido.create({
+    data: {
+      codigo: 'em_entrega',
+      nome: 'Saiu para Entrega',
+      descricao: 'Pedido saiu para entrega',
+      cor: '#06b6d4',
+      ordem: 5,
+    },
+  });
+
+  const statusEntregue = await prisma.statusPedido.create({
+    data: {
+      codigo: 'entregue',
+      nome: 'Entregue',
+      descricao: 'Pedido foi entregue ao cliente',
+      cor: '#10b981',
+      ordem: 6,
+    },
+  });
+
+  const statusCancelado = await prisma.statusPedido.create({
+    data: {
+      codigo: 'cancelado',
+      nome: 'Cancelado',
+      descricao: 'Pedido foi cancelado',
+      cor: '#ef4444',
+      ordem: 7,
+    },
+  });
+
+  console.log('✅ 7 status de pedidos criados');
+
+  // 2. Criar Permissões
   const permissaoAdminGlobal = await prisma.permissao.create({
     data: {
       id: 1,
@@ -436,8 +510,8 @@ async function main() {
       empresaId: empresa1.id,
       usuarioId: funcionario1.id,
       enderecoId: endereco1.id,
+      statusId: statusEntregue.id,
       numero: 'PED-001',
-      status: 'entregue',
       subtotal: 28.90,
       taxaEntrega: 8.50,
       total: 37.40,
@@ -455,11 +529,11 @@ async function main() {
       },
       historico: {
         create: [
-          { status: 'pendente', observacao: 'Pedido criado' },
-          { status: 'confirmado', observacao: 'Pedido confirmado pelo restaurante' },
-          { status: 'preparando', observacao: 'Pedido em preparo' },
-          { status: 'saiu_entrega', observacao: 'Saiu para entrega' },
-          { status: 'entregue', observacao: 'Pedido entregue' },
+          { statusId: statusPendente.id, observacao: 'Pedido criado' },
+          { statusId: statusConfirmado.id, observacao: 'Pedido confirmado pelo restaurante' },
+          { statusId: statusEmPreparo.id, observacao: 'Pedido em preparo' },
+          { statusId: statusEmEntrega.id, observacao: 'Saiu para entrega' },
+          { statusId: statusEntregue.id, observacao: 'Pedido entregue' },
         ],
       },
     },
@@ -477,8 +551,8 @@ async function main() {
       empresaId: empresa1.id,
       usuarioId: funcionario1.id,
       enderecoId: endereco1.id,
+      statusId: statusEmPreparo.id,
       numero: 'PED-002',
-      status: 'preparando',
       subtotal: 39.90,
       taxaEntrega: 8.50,
       total: 48.40,
@@ -505,9 +579,9 @@ async function main() {
       },
       historico: {
         create: [
-          { status: 'pendente', observacao: 'Pedido criado' },
-          { status: 'confirmado', observacao: 'Pedido confirmado' },
-          { status: 'preparando', observacao: 'Em preparo' },
+          { statusId: statusPendente.id, observacao: 'Pedido criado' },
+          { statusId: statusConfirmado.id, observacao: 'Pedido confirmado' },
+          { statusId: statusEmPreparo.id, observacao: 'Preparando' },
         ],
       },
     },
@@ -518,8 +592,8 @@ async function main() {
       empresaId: empresa2.id,
       usuarioId: funcionario2.id,
       enderecoId: endereco2.id,
+      statusId: statusPendente.id,
       numero: 'PED-003',
-      status: 'pendente',
       subtotal: 45.00,
       taxaEntrega: 10.00,
       total: 55.00,
@@ -536,7 +610,7 @@ async function main() {
         ],
       },
       historico: {
-        create: [{ status: 'pendente', observacao: 'Pedido criado' }],
+        create: [{ statusId: statusPendente.id, observacao: 'Pedido criado' }],
       },
     },
   });

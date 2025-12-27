@@ -215,13 +215,30 @@ model Endereco {
   @@map("endereco")
 }
 
+model StatusPedido {
+  id          Int      @id @default(autoincrement())
+  codigo      String   @unique @db.VarChar(50) // pendente, confirmado, em_preparo, pronto, em_entrega, entregue, cancelado
+  nome        String   @db.VarChar(100) // Nome amigável: "Em Análise", "Confirmado", etc
+  descricao   String?  @db.Text
+  cor         String?  @db.VarChar(20) // Hex color para UI
+  ordem       Int      @default(0) // Ordem de exibição
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  pedidos     Pedido[]
+  historicos  HistoricoPedido[]
+
+  @@map("status_pedido")
+}
+
 model Pedido {
   id                Int            @id @default(autoincrement())
   empresaId         Int            @map("empresa_id")
   usuarioId         Int            @map("usuario_id")
   enderecoId        Int            @map("endereco_id")
+  statusId          Int            @map("status_id")
   numero            String         @unique
-  status            String         @default("pendente") // pendente, confirmado, preparando, saiu_entrega, entregue, cancelado
   subtotal          Decimal        @db.Decimal(10, 2)
   taxaEntrega       Decimal        @db.Decimal(10, 2) @map("taxa_entrega")
   total             Decimal        @db.Decimal(10, 2)
@@ -235,6 +252,7 @@ model Pedido {
   empresa           Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   usuario           Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   endereco          Endereco       @relation(fields: [enderecoId], references: [id])
+  status            StatusPedido   @relation(fields: [statusId], references: [id])
   itens             ItemPedido[]
   historico         HistoricoPedido[]
 
@@ -272,13 +290,14 @@ model ItemAdicional {
 }
 
 model HistoricoPedido {
-  id          Int       @id @default(autoincrement())
-  pedidoId    Int       @map("pedido_id")
-  status      String
-  observacao  String?   @db.Text
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id          Int          @id @default(autoincrement())
+  pedidoId    Int          @map("pedido_id")
+  statusId    Int          @map("status_id")
+  observacao  String?      @db.Text
+  createdAt   DateTime     @default(now()) @map("created_at")
 
-  pedido      Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  pedido      Pedido       @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  status      StatusPedido @relation(fields: [statusId], references: [id])
 
   @@map("historico_pedido")
 }

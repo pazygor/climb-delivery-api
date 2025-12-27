@@ -5,9 +5,5 @@ import { IsOptional, IsString } from 'class-validator';
 export class UpdatePedidoDto extends PartialType(CreatePedidoDto) {
   @IsOptional()
   @IsString()
-  status?: string;
-
-  @IsOptional()
-  @IsString()
   motivoCancelamento?: string;
 }

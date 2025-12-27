@@ -11,6 +11,8 @@ import {
 import { PedidoService } from './pedido.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto } from './dto/update-pedido.dto';
+import { CreatePedidoManualDto } from './dto/create-pedido-manual.dto';
+import { UpdateStatusPedidoDto } from './dto/update-status-pedido.dto';
 
 @Controller('pedidos')
 export class PedidoController {
@@ -19,6 +21,11 @@ export class PedidoController {
   @Post()
   create(@Body() createPedidoDto: CreatePedidoDto) {
     return this.pedidoService.create(createPedidoDto);
+  }
+
+  @Post('manual')
+  createManual(@Body() createPedidoManualDto: CreatePedidoManualDto) {
+    return this.pedidoService.createManual(createPedidoManualDto);
   }
 
   @Get()
@@ -47,9 +54,9 @@ export class PedidoController {
   @Patch(':id/status')
   updateStatus(
     @Param('id') id: string,
-    @Body() updatePedidoDto: UpdatePedidoDto,
+    @Body() updateStatusDto: UpdateStatusPedidoDto,
   ) {
-    return this.pedidoService.updateStatus(+id, updatePedidoDto);
+    return this.pedidoService.updateStatus(+id, updateStatusDto);
   }
 
   @Patch(':id')
