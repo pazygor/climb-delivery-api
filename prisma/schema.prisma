@@ -36,6 +36,12 @@ model Empresa {
   horarioFechamento String?    @map("horario_fechamento")
   taxaEntrega      Decimal     @default(0) @db.Decimal(10, 2) @map("taxa_entrega")
   tempoMedioEntrega Int?       @map("tempo_medio_entrega") // em minutos
+  pedidoMinimo     Decimal?    @default(0) @db.Decimal(10, 2) @map("pedido_minimo")
+  descricao        String?     @db.Text
+  chavePix         String?     @map("chave_pix")
+  whatsapp         String?
+  instagram        String?
+  facebook         String?
   // Timestamps
   createdAt        DateTime    @default(now()) @map("created_at")
   updatedAt        DateTime    @updatedAt @map("updated_at")

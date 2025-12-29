@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpException, HttpStatus } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('users')
 export class UserController {
@@ -30,5 +31,25 @@ export class UserController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userService.remove(+id);
+  }
+
+  @Post(':id/change-password')
+  async changePassword(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() changePasswordDto: ChangePasswordDto
+  ) {
+    try {
+      await this.userService.changePassword(
+        id,
+        changePasswordDto.senhaAtual,
+        changePasswordDto.novaSenha
+      );
+      return { message: 'Senha alterada com sucesso!' };
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Erro ao alterar senha',
+        HttpStatus.BAD_REQUEST
+      );
+    }
   }
 }

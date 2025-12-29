@@ -58,11 +58,14 @@ export class UserService {
         empresaId: true,
         nome: true,
         email: true,
+        telefone: true,
+        foto: true,
+        cpf: true,
+        permissaoId: true,
         permissao: true,
         updatedAt: true,
         createdAt: true,
         ativo: true,
-        senha: true,
       },
     });
   }
@@ -75,11 +78,14 @@ export class UserService {
         empresaId: true,
         nome: true,
         email: true,
+        telefone: true,
+        foto: true,
+        cpf: true,
+        permissaoId: true,
         permissao: true,
         updatedAt: true,
         createdAt: true,
         ativo: true,
-        senha: true,
       },
     });
   }
@@ -95,12 +101,62 @@ export class UserService {
     return this.prisma.usuario.update({
       where: { id },
       data: dataToUpdate,
+      select: {
+        id: true,
+        empresaId: true,
+        nome: true,
+        email: true,
+        telefone: true,
+        foto: true,
+        cpf: true,
+        permissaoId: true,
+        permissao: true,
+        updatedAt: true,
+        createdAt: true,
+        ativo: true,
+      },
     });
   }
 
   remove(id: number) {
     return this.prisma.usuario.delete({
       where: { id },
+    });
+  }
+
+  async changePassword(id: number, senhaAtual: string, novaSenha: string) {
+    // Busca o usuário
+    const usuario = await this.prisma.usuario.findUnique({
+      where: { id },
+    });
+
+    if (!usuario) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    // Verifica se a senha atual está correta
+    const senhaValida = await bcrypt.compare(senhaAtual, usuario.senha);
+    if (!senhaValida) {
+      throw new Error('Senha atual incorreta');
+    }
+
+    // Hash da nova senha
+    const novaSenhaHash = await bcrypt.hash(novaSenha, 10);
+
+    // Atualiza a senha
+    return this.prisma.usuario.update({
+      where: { id },
+      data: { senha: novaSenhaHash },
+      select: {
+        id: true,
+        empresaId: true,
+        nome: true,
+        email: true,
+        permissao: true,
+        updatedAt: true,
+        createdAt: true,
+        ativo: true,
+      },
     });
   }
 }

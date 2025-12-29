@@ -76,4 +76,28 @@ export class CreateEmpresaDto {
   @IsOptional()
   @IsInt()
   tempoMedioEntrega?: number;
+
+  @IsOptional()
+  @IsDecimal()
+  pedidoMinimo?: number;
+
+  @IsOptional()
+  @IsString()
+  descricao?: string;
+
+  @IsOptional()
+  @IsString()
+  chavePix?: string;
+
+  @IsOptional()
+  @IsString()
+  whatsapp?: string;
+
+  @IsOptional()
+  @IsString()
+  instagram?: string;
+
+  @IsOptional()
+  @IsString()
+  facebook?: string;
 }
