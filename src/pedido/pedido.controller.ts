@@ -7,12 +7,15 @@ import {
   Param,
   Delete,
   Query,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { PedidoService } from './pedido.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto } from './dto/update-pedido.dto';
 import { CreatePedidoManualDto } from './dto/create-pedido-manual.dto';
 import { UpdateStatusPedidoDto } from './dto/update-status-pedido.dto';
+import { ReportFiltersDto } from './dto/report-filters.dto';
 
 @Controller('pedidos')
 export class PedidoController {
@@ -67,5 +70,34 @@ export class PedidoController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.pedidoService.remove(+id);
+  }
+
+  @Get('relatorio/empresa/:empresaId')
+  async getReport(
+    @Param('empresaId') empresaId: string,
+    @Query('dataInicio') dataInicio: string,
+    @Query('dataFim') dataFim: string,
+  ) {
+    try {
+      if (!dataInicio || !dataFim) {
+        throw new HttpException(
+          'dataInicio e dataFim são obrigatórios',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const filters: ReportFiltersDto = {
+        empresaId: +empresaId,
+        dataInicio,
+        dataFim,
+      };
+
+      return await this.pedidoService.getReport(filters);
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Erro ao gerar relatório',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 }
