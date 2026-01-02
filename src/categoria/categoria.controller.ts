@@ -43,8 +43,21 @@ export class CategoriaController {
     return this.categoriaService.update(+id, updateCategoriaDto);
   }
 
+  @Patch(':id/esgotar-todos')
+  esgotarTodos(
+    @Param('id') id: string,
+    @Body('esgotado') esgotado: boolean,
+  ) {
+    return this.categoriaService.esgotarTodos(+id, esgotado);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.categoriaService.remove(+id);
+  }
+
+  @Post(':id/duplicate')
+  duplicate(@Param('id') id: string) {
+    return this.categoriaService.duplicate(+id);
   }
 }

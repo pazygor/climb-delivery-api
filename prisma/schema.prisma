@@ -31,7 +31,7 @@ model Empresa {
   cep              String      @db.VarChar(8)
   // Configurações
   ativo            Boolean     @default(true)
-  logo             String?     @db.Text
+  logo             String?     @db.LongText
   horarioAbertura  String?     @map("horario_abertura")
   horarioFechamento String?    @map("horario_fechamento")
   taxaEntrega      Decimal     @default(0) @db.Decimal(10, 2) @map("taxa_entrega")
@@ -64,7 +64,7 @@ model Usuario {
   senha          String
   telefone       String?
   cpf            String?      @unique @db.VarChar(11)
-  foto           String?      @db.Text
+  foto           String?      @db.LongText
   permissaoId    Int          @map("permissao_id")
   ativo          Boolean      @default(true)
   resetToken     String?      @map("reset_token")
@@ -118,7 +118,7 @@ model Produto {
   nome        String
   descricao   String?     @db.Text
   preco       Decimal     @db.Decimal(10, 2)
-  imagem      String?     @db.Text
+  imagem      String?     @db.LongText
   disponivel  Boolean     @default(true)
   destaque    Boolean     @default(false)
   vendidoPorKg Boolean    @default(false) @map("vendido_por_kg")

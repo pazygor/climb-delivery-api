@@ -100,6 +100,55 @@ export class ProdutoService {
     });
   }
 
+  async duplicate(id: number) {
+    // Buscar produto original
+    const produtoOriginal = await this.prisma.produto.findUnique({
+      where: { id },
+      include: {
+        gruposProduto: {
+          include: {
+            grupoAdicional: true,
+          },
+        },
+      },
+    });
+
+    if (!produtoOriginal) {
+      throw new Error('Produto não encontrado');
+    }
+
+    // Criar novo produto com dados do original
+    const novoProduto = await this.prisma.produto.create({
+      data: {
+        empresaId: produtoOriginal.empresaId,
+        categoriaId: produtoOriginal.categoriaId,
+        nome: `${produtoOriginal.nome} (cópia)`,
+        descricao: produtoOriginal.descricao,
+        preco: produtoOriginal.preco,
+        imagem: produtoOriginal.imagem,
+        disponivel: produtoOriginal.disponivel,
+        destaque: produtoOriginal.destaque,
+        vendidoPorKg: produtoOriginal.vendidoPorKg,
+        tempoPreparo: produtoOriginal.tempoPreparo,
+        ordem: produtoOriginal.ordem,
+      },
+    });
+
+    // Duplicar vinculações com grupos de adicionais
+    if (produtoOriginal.gruposProduto.length > 0) {
+      await this.prisma.produtoGrupoAdicional.createMany({
+        data: produtoOriginal.gruposProduto.map((gp) => ({
+          produtoId: novoProduto.id,
+          grupoAdicionalId: gp.grupoAdicionalId,
+          ordem: gp.ordem,
+        })),
+      });
+    }
+
+    // Retornar produto duplicado com relacionamentos
+    return this.findOne(novoProduto.id);
+  }
+
   async uploadImagem(id: number, file: Express.Multer.File) {
     // Por enquanto, vamos salvar como base64 no banco
     // Em produção, seria melhor usar S3, Cloudinary, etc.

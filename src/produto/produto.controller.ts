@@ -48,13 +48,40 @@ export class ProdutoController {
     return this.produtoService.update(+id, updateProdutoDto);
   }
 
+  @Patch(':id/disponibilidade')
+  toggleDisponibilidade(
+    @Param('id') id: string,
+    @Body('disponivel') disponivel: boolean,
+  ) {
+    return this.produtoService.update(+id, { disponivel });
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.produtoService.remove(+id);
   }
 
+  @Post(':id/duplicate')
+  duplicate(@Param('id') id: string) {
+    return this.produtoService.duplicate(+id);
+  }
+
   @Post(':id/imagem')
-  @UseInterceptors(FileInterceptor('imagem'))
+  @UseInterceptors(
+    FileInterceptor('imagem', {
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB
+      },
+      fileFilter: (req, file, callback) => {
+        const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (allowedMimeTypes.includes(file.mimetype)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Apenas arquivos JPG, JPEG, PNG e WEBP são aceitos'), false);
+        }
+      },
+    }),
+  )
   uploadImagem(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
