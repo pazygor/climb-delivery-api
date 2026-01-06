@@ -22,6 +22,11 @@ export class CreateEmpresaDto {
 
   @IsOptional()
   @IsString()
+  @Length(3, 100)
+  slug?: string;
+
+  @IsOptional()
+  @IsString()
   telefone?: string;
 
   @IsOptional()
