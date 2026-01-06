@@ -18,6 +18,7 @@ async function main() {
   await prisma.grupoAdicional.deleteMany();
   await prisma.produto.deleteMany();
   await prisma.categoria.deleteMany();
+  await prisma.configuracaoLinkPublico.deleteMany(); // Deletar configurações antes de empresas
   await prisma.usuario.deleteMany();
   await prisma.empresa.deleteMany();
   await prisma.permissao.deleteMany();
@@ -130,7 +131,9 @@ async function main() {
       cnpj: '12345678000190',
       razaoSocial: 'Burger House Ltda',
       nomeFantasia: 'Burger House',
+      slug: 'burger-house', // Slug para link público
       telefone: '11987654321',
+      whatsapp: '5511987654321', // WhatsApp com DDI e DDD
       email: 'contato@burgerhouse.com',
       endereco: 'Rua das Flores',
       numero: '123',
@@ -151,7 +154,9 @@ async function main() {
       cnpj: '98765432000180',
       razaoSocial: 'Pizzaria Bella Napoli Ltda',
       nomeFantasia: 'Pizzaria Bella Napoli',
+      slug: 'bella-napoli', // Slug para link público
       telefone: '11912345678',
+      whatsapp: '5511912345678', // WhatsApp com DDI e DDD
       email: 'contato@bellanapoli.com',
       endereco: 'Avenida Paulista',
       numero: '1000',
@@ -168,6 +173,55 @@ async function main() {
   });
 
   console.log('✅ Empresas criadas');
+
+  // Criar configurações visuais padrão para as empresas
+  await prisma.configuracaoLinkPublico.create({
+    data: {
+      empresaId: empresa1.id,
+      exibirBanner: true,
+      mensagemBanner: 'Os melhores hambúrgueres da cidade! 🍔',
+      corPrimaria: '#E63946',
+      corSecundaria: '#C2263B',
+      corAcento: '#FF5964',
+      corTexto: '#212121',
+      corFundo: '#FFFFFF',
+      corHeaderBackground: '#E63946',
+      corHeaderTexto: '#FFFFFF',
+      estiloBotao: 'rounded',
+      estiloCard: 'shadow',
+      tamanhoFonte: 'medium',
+      exibirPromocoes: true,
+      exibirDestaques: true,
+      metaTitulo: 'Burger House - Delivery de Hambúrgueres Artesanais',
+      metaDescricao: 'Peça agora os melhores hambúrgueres artesanais de São Paulo. Entrega rápida e ingredientes selecionados!',
+      urlInstagram: 'https://instagram.com/burgerhouse',
+    },
+  });
+
+  await prisma.configuracaoLinkPublico.create({
+    data: {
+      empresaId: empresa2.id,
+      exibirBanner: true,
+      mensagemBanner: 'Pizzas autênticas da Itália! 🍕',
+      corPrimaria: '#2A9D8F',
+      corSecundaria: '#218C7E',
+      corAcento: '#52B7A8',
+      corTexto: '#212121',
+      corFundo: '#FFFFFF',
+      corHeaderBackground: '#2A9D8F',
+      corHeaderTexto: '#FFFFFF',
+      estiloBotao: 'pill',
+      estiloCard: 'border',
+      tamanhoFonte: 'medium',
+      exibirPromocoes: true,
+      exibirDestaques: true,
+      metaTitulo: 'Bella Napoli - Pizzaria Italiana Autêntica',
+      metaDescricao: 'Saboreie as melhores pizzas italianas com ingredientes importados. Massa artesanal e forno a lenha!',
+      urlInstagram: 'https://instagram.com/bellanapoli',
+    },
+  });
+
+  console.log('✅ Configurações de link público criadas');
 
   // 3. Criar Usuários
   const hashedPassword = await bcrypt.hash('123456', 10);

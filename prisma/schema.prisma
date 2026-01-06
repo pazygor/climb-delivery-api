@@ -19,6 +19,7 @@ model Empresa {
   cnpj             String      @unique @db.VarChar(14)
   razaoSocial      String      @map("razao_social")
   nomeFantasia     String?     @map("nome_fantasia")
+  slug             String?     @unique @db.VarChar(100) // Slug para link público
   telefone         String?
   email            String?
   // Endereço
@@ -52,6 +53,7 @@ model Empresa {
   produtos         Produto[]
   pedidos          Pedido[]
   gruposAdicionais GrupoAdicional[]
+  configuracaoLinkPublico ConfiguracaoLinkPublico?
 
   @@map("empresa")
 }
@@ -308,4 +310,61 @@ model HistoricoPedido {
   status      StatusPedido @relation(fields: [statusId], references: [id])
 
   @@map("historico_pedido")
+}
+
+// ============================================
+// TABELA DE CONFIGURAÇÃO VISUAL DO LINK PÚBLICO
+// ============================================
+
+model ConfiguracaoLinkPublico {
+  id                    Int       @id @default(autoincrement())
+  empresaId             Int       @unique @map("empresa_id")
+  
+  // Banner Principal
+  bannerUrl             String?   @db.Text @map("banner_url")
+  bannerMobileUrl       String?   @db.Text @map("banner_mobile_url")
+  exibirBanner          Boolean   @default(true) @map("exibir_banner")
+  mensagemBanner        String?   @db.Text @map("mensagem_banner")
+  
+  // Cores Personalizadas
+  corPrimaria           String    @default("#cc0000") @map("cor_primaria") @db.VarChar(7)
+  corSecundaria         String    @default("#b30000") @map("cor_secundaria") @db.VarChar(7)
+  corAcento             String    @default("#ff0000") @map("cor_acento") @db.VarChar(7)
+  corTexto              String    @default("#212121") @map("cor_texto") @db.VarChar(7)
+  corFundo              String    @default("#ffffff") @map("cor_fundo") @db.VarChar(7)
+  corHeaderBackground   String    @default("#cc0000") @map("cor_header_background") @db.VarChar(7)
+  corHeaderTexto        String    @default("#ffffff") @map("cor_header_texto") @db.VarChar(7)
+  
+  // Logos e Imagens
+  logoUrl               String?   @db.Text @map("logo_url")
+  faviconUrl            String?   @db.Text @map("favicon_url")
+  logoHeaderUrl         String?   @db.Text @map("logo_header_url")
+  
+  // Estilo e Layout
+  estiloBotao           String    @default("rounded") @map("estilo_botao") @db.VarChar(20)
+  estiloCard            String    @default("shadow") @map("estilo_card") @db.VarChar(20)
+  tamanhoFonte          String    @default("medium") @map("tamanho_fonte") @db.VarChar(20)
+  
+  // Informações Adicionais
+  exibirPromocoes       Boolean   @default(true) @map("exibir_promocoes")
+  exibirDestaques       Boolean   @default(true) @map("exibir_destaques")
+  
+  // SEO e Meta Tags
+  metaTitulo            String?   @map("meta_titulo")
+  metaDescricao         String?   @db.Text @map("meta_descricao")
+  metaKeywords          String?   @db.Text @map("meta_keywords")
+  
+  // Redes Sociais
+  urlFacebook           String?   @map("url_facebook")
+  urlInstagram          String?   @map("url_instagram")
+  urlTwitter            String?   @map("url_twitter")
+  
+  // Timestamps
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  // Relacionamento
+  empresa               Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("configuracao_link_publico")
 }

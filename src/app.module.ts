@@ -10,6 +10,8 @@ import { ProdutoModule } from './produto/produto.module';
 import { GrupoAdicionalModule } from './grupo-adicional/grupo-adicional.module';
 import { AdicionalModule } from './adicional/adicional.module';
 import { PedidoModule } from './pedido/pedido.module';
+import { PublicModule } from './public/public.module';
+import { ConfiguracaoLinkPublicoModule } from './configuracao-link-publico/configuracao-link-publico.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { PedidoModule } from './pedido/pedido.module';
     GrupoAdicionalModule,
     AdicionalModule,
     PedidoModule,
+    PublicModule,
+    ConfiguracaoLinkPublicoModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
