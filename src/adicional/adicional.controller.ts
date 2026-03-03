@@ -52,4 +52,24 @@ export class AdicionalController {
   remove(@Param('id') id: string) {
     return this.adicionalService.remove(+id);
   }
+
+  @Post(':id/duplicate')
+  duplicate(@Param('id') id: string) {
+    return this.adicionalService.duplicate(+id);
+  }
+
+  @Patch(':id/soft-delete')
+  softDelete(@Param('id') id: string) {
+    return this.adicionalService.softDelete(+id);
+  }
+
+  @Post('reorder')
+  reorder(@Body() body: { grupoId: number; ids: number[] }) {
+    return this.adicionalService.reorder(body.grupoId, body.ids);
+  }
+
+  @Patch('batch')
+  updateMany(@Body() updates: Array<{ id: number; data: UpdateAdicionalDto }>) {
+    return this.adicionalService.updateMany(updates);
+  }
 }
