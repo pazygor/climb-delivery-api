@@ -102,7 +102,34 @@ export class ConfiguracaoLinkPublicoService {
       configuracao = await this.createDefault(empresaId);
     }
 
-    return configuracao;
+    // Mapeia campos do banco para o frontend
+    return this.mapFieldNamesReverse(configuracao);
+  }
+
+  /**
+   * Mapeia nomes de campos do banco para o frontend
+   */
+  private mapFieldNamesReverse(data: any): any {
+    const mapped = { ...data };
+    
+    // Adiciona aliases para compatibilidade com frontend
+    if (mapped.bannerUrl) {
+      mapped.urlBannerDesktop = mapped.bannerUrl;
+    }
+    if (mapped.bannerMobileUrl) {
+      mapped.urlBannerMobile = mapped.bannerMobileUrl;
+    }
+    if (mapped.logoHeaderUrl) {
+      mapped.urlLogoHeader = mapped.logoHeaderUrl;
+    }
+    if (mapped.logoUrl) {
+      mapped.urlLogoPrincipal = mapped.logoUrl;
+    }
+    if (mapped.faviconUrl) {
+      mapped.urlFavicon = mapped.faviconUrl;
+    }
+    
+    return mapped;
   }
 
   /**
@@ -118,10 +145,48 @@ export class ConfiguracaoLinkPublicoService {
       throw new NotFoundException('Configuração não encontrada');
     }
 
+    // Mapeia campos do frontend para o schema do banco
+    const mappedData = this.mapFieldNames(updateDto);
+
     return this.prisma.configuracaoLinkPublico.update({
       where: { id },
-      data: updateDto,
+      data: mappedData,
     });
+  }
+
+  /**
+   * Mapeia nomes de campos do frontend para o schema do banco
+   */
+  private mapFieldNames(data: any): any {
+    const mapped = { ...data };
+    
+    // Remove campos que não existem no schema e mapeia para os corretos
+    if ('urlBannerDesktop' in mapped) {
+      mapped.bannerUrl = mapped.urlBannerDesktop;
+      delete mapped.urlBannerDesktop;
+    }
+    if ('urlBannerMobile' in mapped) {
+      mapped.bannerMobileUrl = mapped.urlBannerMobile;
+      delete mapped.urlBannerMobile;
+    }
+    if ('urlLogoHeader' in mapped) {
+      mapped.logoHeaderUrl = mapped.urlLogoHeader;
+      delete mapped.urlLogoHeader;
+    }
+    if ('urlLogoPrincipal' in mapped) {
+      mapped.logoUrl = mapped.urlLogoPrincipal;
+      delete mapped.urlLogoPrincipal;
+    }
+    if ('urlFavicon' in mapped) {
+      mapped.faviconUrl = mapped.urlFavicon;
+      delete mapped.urlFavicon;
+    }
+    if ('urlWhatsapp' in mapped) {
+      // urlWhatsapp não existe no schema, remove
+      delete mapped.urlWhatsapp;
+    }
+    
+    return mapped;
   }
 
   /**

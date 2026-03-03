@@ -125,6 +125,39 @@ export class ConfiguracaoLinkPublicoController {
   }
 
   /**
+   * PUT /configuracao-link-publico/empresa/:empresaId
+   * Atualiza ou cria configuração por empresaId
+   * Requer autenticação JWT
+   */
+  @Put('empresa/:empresaId')
+  async updateByEmpresa(
+    @Param('empresaId', ParseIntPipe) empresaId: number,
+    @Body() updateDto: UpdateConfiguracaoDto
+  ) {
+    try {
+      // Busca configuração existente da empresa
+      const configuracao = await this.configuracaoService.findByEmpresaId(empresaId);
+      
+      // Se encontrou, atualiza usando o ID da configuração
+      if (configuracao && configuracao.id) {
+        return await this.configuracaoService.update(configuracao.id, updateDto);
+      } else {
+        // Se não existe, cria nova configuração
+        return await this.configuracaoService.create({
+          ...updateDto,
+          empresaId,
+        } as any);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar configuração:', error);
+      throw new HttpException(
+        'Erro ao salvar configuração',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  /**
    * DELETE /configuracao-link-publico/:id
    * Remove configuração (volta para padrão)
    * Requer autenticação JWT

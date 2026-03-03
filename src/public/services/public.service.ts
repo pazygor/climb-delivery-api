@@ -64,6 +64,9 @@ export class PublicService {
       where: { empresaId: empresa.id },
     });
 
+    // Mapeia os nomes dos campos para compatibilidade com o frontend
+    const configuracaoMapeada = configuracaoVisual ? this.mapFieldNamesReverse(configuracaoVisual) : null;
+
     // Busca todas as categorias ativas com produtos e adicionais
     const categorias = await this.prisma.categoria.findMany({
       where: {
@@ -145,7 +148,7 @@ export class PublicService {
     return {
       empresa,
       categorias: categoriasFormatadas,
-      configuracaoVisual,
+      configuracaoVisual: configuracaoMapeada,
     };
   }
 
@@ -176,5 +179,23 @@ export class PublicService {
       console.error('Erro ao verificar horário:', error);
       return true;
     }
+  }
+
+  /**
+   * Mapeia os nomes dos campos do backend para o frontend
+   * Adiciona aliases para manter compatibilidade
+   */
+  private mapFieldNamesReverse(data: any): any {
+    if (!data) return null;
+
+    return {
+      ...data,
+      // Adiciona aliases do frontend
+      urlBannerDesktop: data.bannerUrl,
+      urlBannerMobile: data.bannerMobileUrl,
+      urlLogoHeader: data.logoHeaderUrl,
+      urlLogoPrincipal: data.logoUrl,
+      urlFavicon: data.faviconUrl,
+    };
   }
 }

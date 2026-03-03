@@ -321,8 +321,8 @@ model ConfiguracaoLinkPublico {
   empresaId             Int       @unique @map("empresa_id")
   
   // Banner Principal
-  bannerUrl             String?   @db.Text @map("banner_url")
-  bannerMobileUrl       String?   @db.Text @map("banner_mobile_url")
+  bannerUrl             String?   @db.LongText @map("banner_url")
+  bannerMobileUrl       String?   @db.LongText @map("banner_mobile_url")
   exibirBanner          Boolean   @default(true) @map("exibir_banner")
   mensagemBanner        String?   @db.Text @map("mensagem_banner")
   
@@ -336,9 +336,9 @@ model ConfiguracaoLinkPublico {
   corHeaderTexto        String    @default("#ffffff") @map("cor_header_texto") @db.VarChar(7)
   
   // Logos e Imagens
-  logoUrl               String?   @db.Text @map("logo_url")
-  faviconUrl            String?   @db.Text @map("favicon_url")
-  logoHeaderUrl         String?   @db.Text @map("logo_header_url")
+  logoUrl               String?   @db.LongText @map("logo_url")
+  faviconUrl            String?   @db.LongText @map("favicon_url")
+  logoHeaderUrl         String?   @db.LongText @map("logo_header_url")
   
   // Estilo e Layout
   estiloBotao           String    @default("rounded") @map("estilo_botao") @db.VarChar(20)
