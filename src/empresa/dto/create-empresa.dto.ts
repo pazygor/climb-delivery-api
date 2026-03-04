@@ -3,10 +3,11 @@ import {
   IsEmail,
   IsOptional,
   IsBoolean,
-  IsDecimal,
+  IsNumber,
   IsInt,
   Length,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateEmpresaDto {
   @IsString()
@@ -75,15 +76,18 @@ export class CreateEmpresaDto {
   horarioFechamento?: string;
 
   @IsOptional()
-  @IsDecimal()
+  @Transform(({ value }) => value === null || value === '' ? undefined : value)
+  @IsNumber({ allowNaN: false, allowInfinity: false })
   taxaEntrega?: number;
 
   @IsOptional()
+  @Transform(({ value }) => value === null || value === '' ? undefined : value)
   @IsInt()
   tempoMedioEntrega?: number;
 
   @IsOptional()
-  @IsDecimal()
+  @Transform(({ value }) => value === null || value === '' ? undefined : value)
+  @IsNumber({ allowNaN: false, allowInfinity: false })
   pedidoMinimo?: number;
 
   @IsOptional()
