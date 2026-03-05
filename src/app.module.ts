@@ -12,6 +12,7 @@ import { AdicionalModule } from './adicional/adicional.module';
 import { PedidoModule } from './pedido/pedido.module';
 import { PublicModule } from './public/public.module';
 import { ConfiguracaoLinkPublicoModule } from './configuracao-link-publico/configuracao-link-publico.module';
+import { ClienteModule } from './cliente/cliente.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ConfiguracaoLinkPublicoModule } from './configuracao-link-publico/confi
     PedidoModule,
     PublicModule,
     ConfiguracaoLinkPublicoModule,
+    ClienteModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

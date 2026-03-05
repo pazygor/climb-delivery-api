@@ -54,6 +54,7 @@ model Empresa {
   pedidos          Pedido[]
   gruposAdicionais GrupoAdicional[]
   configuracaoLinkPublico ConfiguracaoLinkPublico?
+  clientes         Cliente[]
 
   @@map("empresa")
 }
@@ -245,14 +246,17 @@ model StatusPedido {
 model Pedido {
   id                Int            @id @default(autoincrement())
   empresaId         Int            @map("empresa_id")
-  usuarioId         Int            @map("usuario_id")
-  enderecoId        Int            @map("endereco_id")
+  usuarioId         Int?           @map("usuario_id") // Null para pedidos públicos
+  clienteId         Int?           @map("cliente_id") // Para pedidos do link público
+  enderecoId        Int?           @map("endereco_id") // Null para pedidos públicos (usa endereço do cliente)
   statusId          Int            @map("status_id")
   numero            String         @unique
+  tipoPedido        String         @default("entrega") @map("tipo_pedido") // entrega ou retirada
   subtotal          Decimal        @db.Decimal(10, 2)
   taxaEntrega       Decimal        @db.Decimal(10, 2) @map("taxa_entrega")
   total             Decimal        @db.Decimal(10, 2)
   formaPagamento    String         @map("forma_pagamento") // dinheiro, cartao, pix
+  trocoPara         Decimal?       @db.Decimal(10, 2) @map("troco_para") // Se pagamento em dinheiro
   observacoes       String?        @db.Text
   motivoCancelamento String?       @db.Text @map("motivo_cancelamento")
   tempoEstimado     Int?           @map("tempo_estimado") // em minutos
@@ -260,8 +264,9 @@ model Pedido {
   updatedAt         DateTime       @updatedAt @map("updated_at")
 
   empresa           Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  usuario           Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  endereco          Endereco       @relation(fields: [enderecoId], references: [id])
+  usuario           Usuario?       @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  cliente           Cliente?       @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  endereco          Endereco?      @relation(fields: [enderecoId], references: [id])
   status            StatusPedido   @relation(fields: [statusId], references: [id])
   itens             ItemPedido[]
   historico         HistoricoPedido[]
@@ -297,6 +302,43 @@ model ItemAdicional {
   adicional     Adicional  @relation(fields: [adicionalId], references: [id])
 
   @@map("item_adicional")
+}
+
+// ============================================
+// TABELA DE CLIENTES (LINK PÚBLICO)
+// ============================================
+
+// Clientes que fazem pedidos pelo link público
+// Multi-tenant: mesmo telefone pode existir em diferentes empresas
+model Cliente {
+  id          Int       @id @default(autoincrement())
+  empresaId   Int       @map("empresa_id")
+  nome        String?   // Nome completo (opcional no primeiro pedido)
+  telefone    String    @db.VarChar(15) // Celular - identificador principal
+  email       String?
+  cpf         String?   @db.VarChar(11)
+  
+  // Endereço do Cliente (único por cliente nesta versão)
+  cep         String?   @db.VarChar(8)
+  logradouro  String?
+  numero      String?
+  complemento String?
+  bairro      String?
+  cidade      String?
+  uf          String?   @db.VarChar(2)
+  referencia  String?   @db.Text
+  
+  // Timestamps
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  empresa     Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  pedidos     Pedido[]
+
+  // Unicidade composta: mesmo telefone pode existir em empresas diferentes
+  @@unique([telefone, empresaId])
+  @@map("cliente")
 }
 
 model HistoricoPedido {

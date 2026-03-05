@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, HttpCode, HttpStatus } from '@nestjs/common';
 import { Public } from '../../common/decorators/public.decorator';
 import { PublicPedidoService } from '../services/public-pedido.service';
 import { CreatePedidoPublicoDto } from '../dto/create-pedido-publico.dto';
@@ -13,15 +13,21 @@ export class PublicPedidoController {
    */
   @Public()
   @Post('pedidos')
+  @HttpCode(HttpStatus.CREATED)
   async create(
     @Param('slug') slug: string,
     @Body() createPedidoDto: CreatePedidoPublicoDto,
   ) {
-    // TODO: Implementar na Sprint 8
-    return { 
-      message: 'Endpoint público - Criar pedido',
-      slug,
-      data: createPedidoDto 
-    };
+    return this.publicPedidoService.createPedidoPublico(slug, createPedidoDto);
+  }
+
+  /**
+   * GET /public/pedido/:numero
+   * Busca pedido por número (para página de confirmação)
+   */
+  @Public()
+  @Get('/pedido/:numero')
+  async getPedido(@Param('numero') numero: string) {
+    return this.publicPedidoService.getPedidoByNumero(numero);
   }
 }

@@ -1,16 +1,15 @@
-import { IsNotEmpty, IsString, IsEmail, IsArray, IsOptional, IsEnum, IsNumber, ValidateNested } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsArray, IsOptional, IsEnum, IsNumber, ValidateNested, Matches } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum TipoPedido {
-  ENTREGA = 'ENTREGA',
-  RETIRADA = 'RETIRADA',
+  ENTREGA = 'entrega',
+  RETIRADA = 'retirada',
 }
 
 export enum FormaPagamento {
-  DINHEIRO = 'DINHEIRO',
-  CARTAO_DEBITO = 'CARTAO_DEBITO',
-  CARTAO_CREDITO = 'CARTAO_CREDITO',
-  PIX = 'PIX',
+  DINHEIRO = 'dinheiro',
+  CARTAO = 'cartao',
+  PIX = 'pix',
 }
 
 class ItemAdicionalDto {
@@ -72,19 +71,31 @@ class EnderecoDto {
   referencia?: string;
 }
 
-export class CreatePedidoPublicoDto {
-  // Dados do cliente
+class ClienteDto {
   @IsString()
   @IsNotEmpty()
-  nomeCliente: string;
+  @Matches(/^\d{10,11}$/, { message: 'Telefone deve conter 10 ou 11 dígitos' })
+  telefone: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  telefoneCliente: string;
+  nome?: string;
 
   @IsOptional()
   @IsEmail()
-  emailCliente?: string;
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{11}$/, { message: 'CPF deve conter 11 dígitos' })
+  cpf?: string;
+}
+
+export class CreatePedidoPublicoDto {
+  // Dados do cliente
+  @ValidateNested()
+  @Type(() => ClienteDto)
+  cliente: ClienteDto;
 
   // Tipo de pedido
   @IsEnum(TipoPedido)
