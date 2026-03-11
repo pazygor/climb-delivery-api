@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ClienteService } from 'src/cliente/cliente.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto } from './dto/update-pedido.dto';
 import { CreatePedidoManualDto } from './dto/create-pedido-manual.dto';
@@ -8,7 +9,10 @@ import { ReportFiltersDto } from './dto/report-filters.dto';
 
 @Injectable()
 export class PedidoService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly clienteService: ClienteService,
+  ) {}
 
   async create(createPedidoDto: CreatePedidoDto) {
     const { itens, ...pedidoData } = createPedidoDto;
@@ -66,10 +70,10 @@ export class PedidoService {
 
   /**
    * Cria um pedido manual (atendente registrando pedido de telefone/balcão)
-   * Cria automaticamente um endereço temporário com os dados fornecidos
+   * FASE 2: Agora usa Cliente table e armazena endereço no cliente
    */
   async createManual(createPedidoManualDto: CreatePedidoManualDto) {
-    const { itens, enderecoEntrega, status, ...pedidoData } = createPedidoManualDto;
+    const { itens, cliente, endereco, status, ...pedidoData } = createPedidoManualDto;
 
     // Buscar o status (default: pendente)
     const statusPedido = await this.prisma.statusPedido.findFirst({
@@ -80,27 +84,40 @@ export class PedidoService {
       throw new Error('Status não encontrado');
     }
 
-    // Criar endereço temporário com os dados fornecidos
-    const endereco = await this.prisma.endereco.create({
-      data: {
-        usuarioId: pedidoData.usuarioId,
-        titulo: 'Endereço de Entrega',
-        logradouro: enderecoEntrega,
-        numero: 'S/N',
-        bairro: 'N/A',
-        cidade: 'N/A',
-        uf: 'NA',
-        cep: '00000000',
-        principal: false,
-      },
-    });
+    // Gerar número do pedido se não fornecido
+    const numeroPedido = pedidoData.numero || `PED-${Date.now()}`;
 
-    // Criar o pedido
+    // Criar ou encontrar cliente usando ClienteService (mesmo padrão do link público)
+    const clienteCriado = await this.clienteService.findOrCreate(
+      pedidoData.empresaId,
+      cliente,
+    );
+
+    // Se for entrega e tiver endereço, atualizar o cliente com os dados do endereço
+    if (pedidoData.tipoPedido === 'entrega' && endereco) {
+      await this.prisma.cliente.update({
+        where: { id: clienteCriado.id },
+        data: {
+          cep: endereco.cep,
+          logradouro: endereco.logradouro,
+          numero: endereco.numero,
+          complemento: endereco.complemento,
+          bairro: endereco.bairro,
+          cidade: endereco.cidade,
+          uf: endereco.uf,
+          referencia: endereco.referencia,
+        },
+      });
+    }
+
+    // Criar o pedido com clienteId (não enderecoId)
     return this.prisma.pedido.create({
       data: {
         ...pedidoData,
+        numero: numeroPedido,
         statusId: statusPedido.id,
-        enderecoId: endereco.id,
+        clienteId: clienteCriado.id,
+        enderecoId: null, // Não usar tabela Endereco
         itens: {
           create: itens.map((item) => ({
             produtoId: item.produtoId,
@@ -127,6 +144,10 @@ export class PedidoService {
         },
       },
       include: {
+        cliente: true,
+        usuario: true,
+        endereco: true,
+        status: true,
         itens: {
           include: {
             produto: true,
@@ -137,9 +158,11 @@ export class PedidoService {
             },
           },
         },
-        usuario: true,
-        endereco: true,
-        historico: true,
+        historico: {
+          include: {
+            status: true,
+          },
+        },
       },
     });
   }
@@ -197,11 +220,17 @@ export class PedidoService {
             telefone: true,
           },
         },
+        cliente: true,
         endereco: true,
         status: true,
-        _count: {
-          select: {
-            itens: true,
+        itens: {
+          include: {
+            produto: true,
+            adicionais: {
+              include: {
+                adicional: true,
+              },
+            },
           },
         },
       },
@@ -245,7 +274,9 @@ export class PedidoService {
       include: {
         empresa: true,
         usuario: true,
+        cliente: true,
         endereco: true,
+        status: true,
         itens: {
           include: {
             produto: true,
@@ -261,6 +292,9 @@ export class PedidoService {
           },
         },
         historico: {
+          include: {
+            status: true,
+          },
           orderBy: {
             createdAt: 'asc',
           },

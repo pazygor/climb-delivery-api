@@ -20,14 +20,4 @@ export class PublicPedidoController {
   ) {
     return this.publicPedidoService.createPedidoPublico(slug, createPedidoDto);
   }
-
-  /**
-   * GET /public/pedido/:numero
-   * Busca pedido por número (para página de confirmação)
-   */
-  @Public()
-  @Get('/pedido/:numero')
-  async getPedido(@Param('numero') numero: string) {
-    return this.publicPedidoService.getPedidoByNumero(numero);
-  }
 }

@@ -5,9 +5,62 @@ import {
   IsDecimal,
   IsArray,
   ValidateNested,
-  IsBoolean,
+  IsIn,
+  IsEmail,
+  Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+
+// DTO para dados do cliente
+class ClienteDto {
+  @IsString()
+  @Matches(/^\d{10,11}$/, { message: 'Telefone deve conter 10 ou 11 dígitos' })
+  telefone: string;
+
+  @IsOptional()
+  @IsString()
+  nome?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{11}$/, { message: 'CPF deve conter 11 dígitos' })
+  cpf?: string;
+}
+
+// DTO para endereço de entrega (condicional)
+class EnderecoDto {
+  @IsString()
+  @Matches(/^\d{8}$/, { message: 'CEP deve conter 8 dígitos' })
+  cep: string;
+
+  @IsString()
+  logradouro: string;
+
+  @IsString()
+  numero: string;
+
+  @IsOptional()
+  @IsString()
+  complemento?: string;
+
+  @IsString()
+  bairro: string;
+
+  @IsString()
+  cidade: string;
+
+  @IsString()
+  @Matches(/^[A-Z]{2}$/, { message: 'UF deve conter 2 letras maiúsculas' })
+  uf: string;
+
+  @IsOptional()
+  @IsString()
+  referencia?: string;
+}
 
 class ItemAdicionalDto {
   @IsInt()
@@ -49,13 +102,27 @@ export class CreatePedidoManualDto {
   empresaId: number;
 
   @IsInt()
-  usuarioId: number;
+  usuarioId: number; // Atendente que está registrando o pedido
 
-  @IsString()
-  enderecoEntrega: string; // Endereço completo como string
+  // Dados do cliente (obrigatório)
+  @ValidateNested()
+  @Type(() => ClienteDto)
+  cliente: ClienteDto;
 
+  // Tipo de pedido
   @IsString()
-  numero: string;
+  @IsIn(['entrega', 'retirada'], { message: 'Tipo de pedido deve ser entrega ou retirada' })
+  tipoPedido: string;
+
+  // Endereço (obrigatório se tipoPedido === 'entrega')
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnderecoDto)
+  endereco?: EnderecoDto;
+
+  @IsOptional()
+  @IsString()
+  numero?: string; // Número do pedido (gerado automaticamente se não fornecido)
 
   @IsOptional()
   @IsString()
@@ -71,23 +138,20 @@ export class CreatePedidoManualDto {
   total: number;
 
   @IsString()
+  @IsIn(['dinheiro', 'cartao', 'pix'], { message: 'Forma de pagamento inválida' })
   formaPagamento: string;
 
   @IsOptional()
+  @IsDecimal()
+  trocoPara?: number;
+
+  @IsOptional()
   @IsString()
-  observacoes?: string; // Inclui dados do cliente (nome, telefone)
+  observacoes?: string; // Apenas observações reais do pedido
 
   @IsOptional()
   @IsInt()
   tempoEstimado?: number;
-
-  @IsOptional()
-  @IsBoolean()
-  trocoNecessario?: boolean;
-
-  @IsOptional()
-  @IsDecimal()
-  valorTroco?: number;
 
   @IsArray()
   @ValidateNested({ each: true })
