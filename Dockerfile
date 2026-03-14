@@ -36,7 +36,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Instalar apenas dependências de produção
-RUN npm ci --only=production && \
+RUN npm ci --only=production --ignore-scripts && \
     npx prisma generate && \
     npm cache clean --force
 
