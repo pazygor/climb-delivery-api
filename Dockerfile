@@ -9,8 +9,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Instalar dependências
-RUN npm ci
+# Instalar dependências (ignorar script postinstall que precisa de DATABASE_URL)
+RUN npm ci --ignore-scripts
 
 # Copiar código fonte
 COPY . .
