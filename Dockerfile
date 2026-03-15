@@ -29,7 +29,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Instalar apenas dependências de runtime
-RUN apk add --no-cache dumb-init
+RUN apk add --no-cache dumb-init python3 make g++
 
 # Copiar package files
 COPY package*.json ./
@@ -38,6 +38,7 @@ COPY prisma ./prisma/
 # Instalar apenas dependências de produção
 RUN npm ci --only=production --ignore-scripts && \
     npx prisma generate && \
+    npm rebuild bcrypt --build-from-source && \
     npm cache clean --force
 
 # Copiar build da stage anterior
