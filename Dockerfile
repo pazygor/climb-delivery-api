@@ -57,9 +57,9 @@ USER nodejs
 # Expor porta
 EXPOSE 3000
 
-# Health check
+# Health check - usar rota /api que existe
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "require('http').get('http://localhost:3000/api', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Usar dumb-init para melhor signal handling
 ENTRYPOINT ["dumb-init", "--"]
